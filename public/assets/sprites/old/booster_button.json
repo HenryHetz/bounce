@@ -1,0 +1,28 @@
+{"frames": [
+
+{
+	"filename": "booster_button_blue",
+	"frame": {"x":0,"y":0,"w":74,"h":74},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":74,"h":74},
+	"sourceSize": {"w":74,"h":74}
+},
+{
+	"filename": "booster_button_pink",
+	"frame": {"x":74,"y":0,"w":74,"h":74},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":74,"h":74},
+	"sourceSize": {"w":74,"h":74}
+}],
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "booster_button.png",
+	"format": "RGBA8888",
+	"size": {"w":148,"h":74},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:1daf5f6be69810e34892da71030b7d5b:d4b2d9cd9f7716d6f8a70aecac1b5698:510ff974d9908978d486b8646f5e469a$"
+}
+}

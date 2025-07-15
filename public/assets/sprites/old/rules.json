@@ -1,0 +1,44 @@
+{"frames": [
+
+{
+	"filename": "rules1",
+	"frame": {"x":1,"y":1,"w":315,"h":274},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":41,"y":18,"w":315,"h":274},
+	"sourceSize": {"w":400,"h":300}
+},
+{
+	"filename": "rules2",
+	"frame": {"x":1,"y":553,"w":315,"h":273},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":41,"y":18,"w":315,"h":273},
+	"sourceSize": {"w":400,"h":300}
+},
+{
+	"filename": "rules3",
+	"frame": {"x":1,"y":277,"w":315,"h":274},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":41,"y":18,"w":315,"h":274},
+	"sourceSize": {"w":400,"h":300}
+},
+{
+	"filename": "rules4",
+	"frame": {"x":1,"y":828,"w":315,"h":273},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":41,"y":18,"w":315,"h":273},
+	"sourceSize": {"w":400,"h":300}
+}],
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "rules.png",
+	"format": "RGBA8888",
+	"size": {"w":317,"h":1102},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:83af7093b1db3c031059bd25a4c8b33b:ae94b37e363ae45f006a752d96c54d2b:857be79dddfe03b89716d7be0294b34f$"
+}
+}

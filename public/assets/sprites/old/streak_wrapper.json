@@ -1,0 +1,52 @@
+{"frames": [
+
+{
+	"filename": "streak_wrapper_back",
+	"frame": {"x":0,"y":0,"w":164,"h":116},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":164,"h":116},
+	"sourceSize": {"w":164,"h":116}
+},
+{
+	"filename": "streak_wrapper_full",
+	"frame": {"x":164,"y":0,"w":164,"h":116},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":164,"h":116},
+	"sourceSize": {"w":164,"h":116}
+},
+{
+	"filename": "streak_wrapper_top_blue",
+	"frame": {"x":328,"y":0,"w":164,"h":116},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":164,"h":116},
+	"sourceSize": {"w":164,"h":116}
+},
+{
+	"filename": "streak_wrapper_top_green",
+	"frame": {"x":492,"y":0,"w":164,"h":116},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":164,"h":116},
+	"sourceSize": {"w":164,"h":116}
+},
+{
+	"filename": "streak_wrapper_top_pink",
+	"frame": {"x":656,"y":0,"w":164,"h":116},
+	"rotated": false,
+	"trimmed": false,
+	"spriteSourceSize": {"x":0,"y":0,"w":164,"h":116},
+	"sourceSize": {"w":164,"h":116}
+}],
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "streak_wrapper.png",
+	"format": "RGBA8888",
+	"size": {"w":820,"h":116},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:9e81dbf2c7126f58154d97ce3d00fb67:dc9c4855306f4a5b6aac025883923c2d:413259c684a9d7e83199acb24853cf2c$"
+}
+}

@@ -1,0 +1,44 @@
+{"frames": [
+
+{
+	"filename": "piggy_idle1",
+	"frame": {"x":121,"y":0,"w":119,"h":116},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":10,"y":3,"w":119,"h":116},
+	"sourceSize": {"w":140,"h":120}
+},
+{
+	"filename": "piggy_idle2",
+	"frame": {"x":121,"y":116,"w":119,"h":113},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":10,"y":6,"w":119,"h":113},
+	"sourceSize": {"w":140,"h":120}
+},
+{
+	"filename": "piggy_run1",
+	"frame": {"x":0,"y":0,"w":121,"h":115},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":10,"y":4,"w":121,"h":115},
+	"sourceSize": {"w":140,"h":120}
+},
+{
+	"filename": "piggy_run2",
+	"frame": {"x":0,"y":115,"w":121,"h":113},
+	"rotated": false,
+	"trimmed": true,
+	"spriteSourceSize": {"x":10,"y":6,"w":121,"h":113},
+	"sourceSize": {"w":140,"h":120}
+}],
+"meta": {
+	"app": "https://www.codeandweb.com/texturepacker",
+	"version": "1.0",
+	"image": "piggy.png",
+	"format": "RGBA8888",
+	"size": {"w":240,"h":229},
+	"scale": "1",
+	"smartupdate": "$TexturePacker:SmartUpdate:668698fe64a44bcce5c106bebddfd1e1:5a89931dbd4b8692641d03745fa7305c:3d96dbdc439b1e30d097852a7c93f9e2$"
+}
+}
