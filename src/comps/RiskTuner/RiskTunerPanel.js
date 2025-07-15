@@ -109,37 +109,49 @@ export class RiskTunerPanel {
 
     // --- Кнопки
     this.buttonClose = scene.add
-      .image(640 - scene.gridUnit, 12 * scene.gridUnit, 'button_close')
+      .image(640 - scene.buttonIndent, scene.buttonY, 'button_close')
       .setOrigin(0.5)
+      .setScale(0.8)
       .setInteractive()
 
     this.buttonReset = scene.add
-      .image(scene.gridUnit, 12 * scene.gridUnit, 'button_reset')
+      .image(scene.buttonIndent, scene.buttonY, 'button_reset')
       .setOrigin(0.5)
+      .setScale(0.8)
       .setInteractive()
     // .setFlipX(true)
     // .setScale(1)
 
     this.buttonCreate = scene.add
-      .image(scene.sceneCenterX, 12 * scene.gridUnit, 'button_create')
+      .image(scene.sceneCenterX, scene.buttonY, 'button_create')
       .setOrigin(0.5)
       .setInteractive()
       .setAlpha(0.6)
 
     this.textClose = scene.add
-      .text(this.buttonClose.x, 11 * scene.gridUnit, 'CLOSE', {
-        fontFamily: 'AvenirNextCondensedBold',
-        fontSize: '18px',
-        color: '#13469A',
-      })
+      .text(
+        this.buttonClose.x,
+        this.buttonClose.y - scene.buttonNameSpacing,
+        'CLOSE',
+        {
+          fontFamily: 'AvenirNextCondensedBold',
+          fontSize: '18px',
+          color: '#13469A',
+        }
+      )
       .setOrigin(0.5, 0)
 
     this.textReset = scene.add
-      .text(this.buttonReset.x, 11 * scene.gridUnit, 'DEFAULT', {
-        fontFamily: 'AvenirNextCondensedBold',
-        fontSize: '18px',
-        color: '#13469A',
-      })
+      .text(
+        this.buttonReset.x,
+        this.buttonReset.y - scene.buttonNameSpacing,
+        'DEFAULT',
+        {
+          fontFamily: 'AvenirNextCondensedBold',
+          fontSize: '18px',
+          color: '#13469A',
+        }
+      )
       .setOrigin(0.5, 0)
 
     // --- Добавляем в контейнер

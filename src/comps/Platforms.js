@@ -14,7 +14,7 @@ export class Platforms {
     this.duration = scene.duration
 
     this.startX = this.ballX + this.hiddingCount * this.spacing
-    this.startY = this.gridUnit * 8.5
+    this.startY = scene.platformY
 
     this.platforms = scene.add.container(this.startX, this.startY)
 
