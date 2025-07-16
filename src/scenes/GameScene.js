@@ -3,6 +3,7 @@ import { Background } from '../comps/Background'
 import { RiskTunerPanel } from '../comps/RiskTuner/RiskTunerPanel'
 import { RiskSlider } from '../comps/RiskTuner/RiskSlider'
 import { BetSlider } from '../comps/Bet/BetSlider'
+import { BetStepper } from '../comps/Bet/BetStepper'
 import {
   normalize,
   getDiscreteValue,
@@ -103,13 +104,15 @@ export default class GameScene extends Phaser.Scene {
       .setScale(1)
       .setDepth(200)
 
+    // this.gridUnit * 1.3
     this.newRiskSettingNotice = this.add
-      .text(this.sceneCenterX, this.gridUnit * 1.3, '', {
+      .text(this.sceneCenterX, this.gridUnit * 9, '', {
         fontSize: '24px',
         color: '#FDD41D',
         fontFamily: 'Courier',
       })
       .setOrigin(0.5, 0)
+      .setAlign('center')
       .setAlpha(0)
 
     this.newRiskSettingNotice.show = (setting) => {
@@ -130,7 +133,7 @@ export default class GameScene extends Phaser.Scene {
 
         this.newRiskSettingNotice.text =
           // 'New settings in the next round...',
-          `${text} ${setting.minPayout} -> ${setting.maxPayout} | ${setting.steps} `
+          `${text} ${setting.minPayout} -> ${setting.maxPayout} | ${setting.steps}`
 
         this.newRiskSettingNotice.alpha = 1
         this.tweens.add({
@@ -209,14 +212,6 @@ export default class GameScene extends Phaser.Scene {
         // )
       }
     }
-
-    // this.buttonStake = this.add
-    //   .image(this.sceneCenterX, 10 * this.gridUnit, 'button_stake')
-    //   .setOrigin(0.5, 0.5)
-    //   .setAlpha(0)
-    // this.buttonStake.show = (state) => {
-    //   this.buttonStake.visible = state
-    // }
 
     this.buttonAuto = this.add
       .image(this.buttonIndent, this.buttonY, 'button_auto')
@@ -299,17 +294,17 @@ export default class GameScene extends Phaser.Scene {
       // }
     }
   }
-  createStakeCounter() {
+  createStakeCounter_() {
     this.currentBetValue = this.initialBet // dev
 
     this.stakeCounter = this.add
-      .text(this.sceneCenterX, 9 * this.gridUnit, '', {
+      .text(this.sceneCenterX, 10 * this.gridUnit, '', {
         font: '40px walibi',
         fill: 'white', // цвет '#FC03B5'
         stroke: 'black', // обводка
         strokeThickness: 3, // толщина обводки
       })
-      .setOrigin(0.5, 0)
+      .setOrigin(0.5)
       .setAlign('center')
       .setAlpha(1)
 
@@ -338,30 +333,16 @@ export default class GameScene extends Phaser.Scene {
       // this.cashOutShadow.setText(this.stakeCount.toFixed(2))
     }
 
-    // dev
+    // в модуль или на сервер / JSON
     const betValues = []
-    // 0.1 -> 0.2 | 0.3 | 0.4 | 0.5 | 0.6 | 0.7 | 0.8 | 0.9 | 1
-    // 1 -> 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
-    // 10 -> 20 | 30 | 40 | 50 | 60 | 70 | 80 | 90 | 100
-    // 100 -> 200 | 300 | 400 | 500 | 600 | 700 | 800 | 900 | 1000
-
-    // добавляем первый ряд отдельно (десятые)
-    // for (let i = 1; i < 10; i++) {
-    //   betValues.push(i / 10)
-    // }
-
-    // // остальные ряды
-    // for (let pow = 0; pow < 3; pow++) {
-    //   for (let i = 1; i < 10; i++) {
-    //     betValues.push(i * 10 ** pow)
-    //   }
-    // }
 
     const rows = [
       { start: 0.1, step: 0.1, count: 9 },
       { start: 1, step: 1, count: 9 },
-      { start: 10, step: 5, count: 18 },
-      { start: 100, step: 10, count: 91 },
+      { start: 10, step: 5, count: 8 },
+      { start: 50, step: 10, count: 5 },
+      { start: 100, step: 25, count: 4 },
+      { start: 200, step: 50, count: 17 },
     ]
 
     for (const row of rows) {
@@ -369,89 +350,89 @@ export default class GameScene extends Phaser.Scene {
         betValues.push(Number((row.start + i * row.step).toFixed(2)))
       }
     }
-    console.table(betValues)
+    // console.table(betValues)
 
-    // this.sliderBet = new RiskSlider(
+    // new slider
+    // this.sliderBet = new BetSlider(
     //   this,
     //   this.sceneCenterX,
     //   10 * this.gridUnit,
-    //   '',
-    //   betValues[0],
-    //   betValues[betValues.length - 1]
+    //   betValues,
+    //   (value) => {
+    //     this.currentBetValue = value
+    //     this.stakeCounter.setText(value.toFixed(2))
+    //   }
     // )
 
-    // this.sliderBet.show = (state) => {
-    //   this.sliderBet.container.setVisible(state)
-    //   this.sliderBet.button.setInteractive(state)
-    //   if (!state && this.input.dragState) {
-    //     this.input.stopDrag(this.sliderBet.button)
-    //   }
-    // }
+    // this.sliderBet.setValue(this.currentBetValue)
 
-    // // Делаем кнопку draggable
-    // this.input.setDraggable(this.sliderBet.button)
+    // new + & - buttons
 
-    // // Слушаем drag-событие
-    // this.input.on('drag', (pointer, gameObject, dragX, dragY) => {
-    //   if (gameObject !== this.sliderBet.button) return
-    //   if (!this.betAllowed) return
+    this.buttonBetMinus = this.add
+      .image(2 * this.gridUnit, this.stakeCounter.y, 'button_bet_minus')
+      .setOrigin(0.5, 0.5)
+      .setScale(1)
 
-    //   // Находим локальные координаты
-    //   const local = this.sliderBet.container.getLocalPoint(pointer.x, pointer.y)
+    this.buttonBetPlus = this.add.image(
+      this.sceneCenterX * 2 - 2 * this.gridUnit,
+      this.stakeCounter.y,
+      'button_bet_plus'
+    )
+  }
+  createStakeCounter() {
+    this.stakeCounter = this.add
+      .text(this.sceneCenterX, 10 * this.gridUnit, '', {
+        font: '40px walibi',
+        fill: 'white', // цвет '#FC03B5'
+        stroke: 'black', // обводка
+        strokeThickness: 3, // толщина обводки
+      })
+      .setOrigin(0.5)
+      .setAlign('center')
 
-    //   // Ограничиваем по оси
-    //   this.sliderBet.button.x = Phaser.Math.Clamp(
-    //     local.x,
-    //     this.sliderBet.min,
-    //     this.sliderBet.max
-    //   )
+    this.stakeCounterUpdate = function (value) {
+      if (value) {
+        this.stakeCount = this.currentBetValue * value // добавляем к ставке
+      } else {
+        this.stakeCount = this.currentBetValue // сброс ставки
+      }
+      this.stakeCounter.setText(this.stakeCount.toFixed(2))
+      // this.cashOutShadow.setText(this.stakeCount.toFixed(2))
+    }
+    this.stakeCounterSet = function (value) {
+      if (!isNaN(value)) this.stakeCounter.setText(value.toFixed(2))
+    }
 
-    //   // Получаем нормализованное значение (0..1)
-    //   const norm = getSliderValue(this.sliderBet)
+    const betValues = []
 
-    //   // Преобразуем в дискретное (если хочешь)
-    //   const index = Math.round(norm * (betValues.length - 1))
-    //   const discreteValue = betValues[index]
+    const rows = [
+      { start: 0.1, step: 0.1, count: 9 },
+      { start: 1, step: 1, count: 9 },
+      { start: 10, step: 5, count: 8 },
+      { start: 50, step: 10, count: 5 },
+      { start: 100, step: 25, count: 4 },
+      { start: 200, step: 50, count: 17 },
+    ]
 
-    //   // console.log('Selected value:', discreteValue)
-    //   if (this.currentBetValue !== discreteValue) {
-    //     this.currentBetValue = discreteValue
-    //     // console.log('Selected discrete value:', discreteValue)
-    //     onSliderValueChange(discreteValue)
-    //   }
-    //   // onSliderValueChange(discreteValue)
-    // })
+    for (const row of rows) {
+      for (let i = 0; i < row.count; i++) {
+        betValues.push(Number((row.start + i * row.step).toFixed(2)))
+      }
+    }
+    this.currentBetValue = this.initialBet
 
-    // const onSliderValueChange = (value) => {
-    //   // console.log('Selected discrete value:', value)
-    //   this.stakeCounter.setText(value.toFixed(2))
-    // }
-
-    // const setSlider = (value) => {
-    //   const index = betValues.indexOf(value)
-    //   if (index === -1) return
-
-    //   const norm = index / (betValues.length - 1)
-    //   // console.log('Setting slider value:', norm)
-    //   setSliderValue(this.sliderBet, norm)
-    // }
-    // setSlider(this.currentBetValue)
-
-    // new
-    this.sliderBet = new BetSlider(
+    this.betStepper = new BetStepper(
       this,
       this.sceneCenterX,
       10 * this.gridUnit,
       betValues,
       (value) => {
         this.currentBetValue = value
-        this.stakeCounter.setText(value.toFixed(2))
+        this.stakeCounterSet(value)
       }
     )
 
-    this.sliderBet.setValue(this.currentBetValue)
-    // this.sliderBet.show(true)
-    // this.sliderBet.setActive(this.betAllowed)
+    this.betStepper.setValue(this.currentBetValue)
   }
   createMoneyCounter() {
     // this.add
@@ -656,7 +637,8 @@ export default class GameScene extends Phaser.Scene {
     }
   }
   finish() {
-    // console.timeEnd('round duration')
+    // console.log('this.allowCashOut', this.allowCashOut)
+    if (this.allowCashOut) this.stakeCounterSet(0)
     this.stopMoving(this.bounceCount)
     this.sounds.dropCoin.play()
     this.allowCashOut = false
@@ -674,7 +656,8 @@ export default class GameScene extends Phaser.Scene {
   setBetAllowed(state) {
     if (this.betAllowed === state) return
     this.betAllowed = state
-    this.sliderBet.setActive(state)
+    // this.sliderBet.setActive(state)
+    this.betStepper.setEnabled(state)
   }
   handleNewSettings(settings) {
     this.currentRiskSetting = { ...settings }

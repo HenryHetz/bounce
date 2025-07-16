@@ -101,11 +101,20 @@ export default class PreloadScene extends Phaser.Scene {
       'button_create',
       'assets/sprites/elements/button_create.png'
     )
+    this.load.image(
+      'button_bet_minus',
+      'assets/sprites/elements/button_bet_minus.png'
+    )
+    this.load.image(
+      'button_bet_plus',
+      'assets/sprites/elements/button_bet_plus.png'
+    )
     this.load.image('header', 'assets/sprites/elements/header_2.png')
     // this.load.image('road_to_hell', 'assets/sprites/elements/road_to_hell.png')
     this.load.image('risk_tuner', 'assets/sprites/elements/risk_tuner.png')
     this.load.image('skull', 'assets/sprites/elements/skull_.png')
     this.load.image('volume_bar', 'assets/sprites/elements/volume_bar.png')
+
     // dev
     // this.load.image('dev_ui', 'assets/sprites/BOUNCE_7.png')
     this.load.image('grid', 'assets/sprites/dev/grid.png')

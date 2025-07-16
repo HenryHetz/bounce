@@ -6,7 +6,7 @@ import GameScene from './scenes/GameScene.js'
 export default {
   type: Phaser.AUTO, // Можно AUTO, CANVAS, WEBGL
   width: 640,
-  height: 1180,
+  height: 1120,
   scale: {
     mode: Phaser.Scale.FIT,
     // autoCenter: Phaser.Scale.NO_CENTER,
