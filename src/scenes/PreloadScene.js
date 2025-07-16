@@ -80,6 +80,7 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.image('platform', 'assets/sprites/elements/platform_2.png')
     this.load.image('button_cash', 'assets/sprites/elements/button_cash.png')
     this.load.image('button_out', 'assets/sprites/elements/button_out.png')
+    this.load.image('button_bet', 'assets/sprites/elements/button_bet.png')
     this.load.image(
       'button_rules',
       'assets/sprites/elements/button_rules_3.png'
@@ -116,9 +117,9 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.image('volume_bar', 'assets/sprites/elements/volume_bar.png')
 
     // dev
-    // this.load.image('dev_ui', 'assets/sprites/BOUNCE_7.png')
+    this.load.image('dev_ui', 'assets/sprites/dev/DROPS_3.png')
     this.load.image('grid', 'assets/sprites/dev/grid.png')
-    // this.load.image('setting_hell', 'assets/sprites/setting_hell.png')
+    // this.load.image('DROPS_3', 'assets/sprites/DROPS_3.png')
 
     // sounds
     this.load.audio('dropCoin', 'assets/sounds/dropCoin.mp3')

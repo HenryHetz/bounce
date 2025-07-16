@@ -1,19 +1,20 @@
 import { DEFAULT_RISK_SETTING } from '../constants/riskConstants'
 import { Background } from '../comps/Background'
 import { RiskTunerPanel } from '../comps/RiskTuner/RiskTunerPanel'
-import { RiskSlider } from '../comps/RiskTuner/RiskSlider'
-import { BetSlider } from '../comps/Bet/BetSlider'
-import { BetStepper } from '../comps/Bet/BetStepper'
-import {
-  normalize,
-  getDiscreteValue,
-  getSliderValue,
-  setSliderValue,
-} from '../comps/RiskTuner/RiskTunerUtils'
+// import { RiskSlider } from '../comps/RiskTuner/RiskSlider'
+// import { BetSlider } from '../comps/Bet/BetSlider'
+// import { BetStepper } from '../comps/Bet/BetStepper'
+// import {
+//   normalize,
+//   getDiscreteValue,
+//   getSliderValue,
+//   setSliderValue,
+// } from '../comps/RiskTuner/RiskTunerUtils'
 
 import { Ball } from '../comps/Ball'
 import { Platforms } from '../comps/Platforms'
 import { FSM } from '../comps/FSM'
+import { GameControlPanel } from '../comps/GameControlPanel'
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
@@ -21,7 +22,6 @@ export default class GameScene extends Phaser.Scene {
   }
   preload() {}
   init() {
-    this.betAllowed = false
     this.isCrashed = false // проигрыш
     this.gridUnit = 80
     this.sceneCenterX = this.cameras.main.centerX // центр сцены по X - через width найти
@@ -40,10 +40,15 @@ export default class GameScene extends Phaser.Scene {
     this.bounceCount = 0 // отскоков
     this.deposit = 10000 // начальная сумма
     this.initialBet = 1 // начальная ставка
-    this.stakeCount = 0 // ставка начальная пока
-    this.allowCashOut = false // разрешить клик по кнопке "вывести деньги"
+    this.currentBetValue = this.initialBet // текущая ставка
+    this.stakeValue = 0 // ставка начальная пока
+
+    this.hasCashOut = false
+    this.cashOutAllowed = false // разрешить клик по кнопке "вывести деньги"
+    this.hasBet = false
+    this.betAllowed = false
+
     this.roundCounter = 0 // счетчик раундов
-    this.outCounter = 0 // счетчик вывода денег
 
     // dev
     this.tweens.timeScale = 1
@@ -59,12 +64,9 @@ export default class GameScene extends Phaser.Scene {
   }
   create() {
     this.background = new Background(this)
-    this.createStakeCounter()
     this.createStartCounter()
-    // this.createDepositCounter()
     this.createParticles()
     this.createUI()
-    this.createButtons()
     this.createMoneyCounter()
 
     this.ball = new Ball(this, this.emitter)
@@ -73,22 +75,76 @@ export default class GameScene extends Phaser.Scene {
 
     this.riskTuner = new RiskTunerPanel(this, this.defaultRiskSetting)
 
-    this.events.on('riskTuner:apply', (newRiskSetting) => {
-      // console.log('[GameScene] riskTuner:apply', newRiskSetting)
-      this.pendingRiskSetting = { ...newRiskSetting }
-      this.newRiskSettingNotice.show()
+    this.gameControlPanel = new GameControlPanel(this, {
+      onCash: () => this.handleButtonClick(),
+      onTuner: () => this.riskTuner.show(true),
     })
 
     if (!this.sounds) this.createSounds()
+
+    this.createEvents()
 
     this.fsm = new FSM()
     this.setupFSMHandlers()
     this.fsm.toCountdown()
 
     // dev
-    // this.countdown()
-    // this.createBallSheet()
-    this.createGrid()
+    // this.createGrid()
+  }
+  handleButtonClick() {
+    // console.log('handleButtonClick', this.cashOutAllowed)
+    const state = this.fsm.getState()
+    // console.log('handleButtonClick', state)
+    if (state === 'COUNTDOWN' && !this.hasBet) {
+      // console.log('handleButtonClick bet')
+      this.moneyCounterUpdate(-this.currentBetValue)
+      this.hasBet = true
+      this.setBetAllowed(false)
+      this.events.emit('gameAction', {
+        mode: 'BET',
+      })
+    }
+
+    if (
+      state === 'ROUND' &&
+      this.cashOutAllowed &&
+      this.hasBet &&
+      !this.hasCashOut
+    ) {
+      // обработка вывода денег
+      this.setCashOutAllowed(false)
+
+      this.hasCashOut = true
+      this.sounds.heart.play()
+      this.moneyCounterUpdate(this.stakeValue) // event
+
+      this.events.emit('gameAction', {
+        mode: 'CASHOUT',
+        hasCashOut: this.hasCashOut,
+        stakeValue: this.stakeValue,
+      })
+
+      this.stakeValue = 0
+    }
+  }
+  createEvents() {
+    this.events.on('riskTuner:apply', (newRiskSetting) => {
+      // console.log('[GameScene] riskTuner:apply', newRiskSetting)
+      this.pendingRiskSetting = { ...newRiskSetting }
+      this.newRiskSettingNotice.show()
+    })
+
+    this.events.on('betChanged', (value) => {
+      // console.log('[GameScene] betChanged', value, this.betAllowed)
+      if (this.betAllowed) {
+        this.currentBetValue = value
+        // console.log('[GameScene] betChanged', value)
+        this.events.emit('gameAction', {
+          mode: 'BET_CHANGED',
+          betValue: this.currentBetValue,
+        })
+      }
+    })
   }
   createUI() {
     this.ui = this.add
@@ -158,116 +214,6 @@ export default class GameScene extends Phaser.Scene {
       .setAlpha(0)
       .setDepth(100)
   }
-  createButtons() {
-    this.buttonY = 11.5 * this.gridUnit
-    this.buttonCash = this.add
-      .image(this.sceneCenterX, this.buttonY, 'button_cash')
-      .setOrigin(0.5, 0.5)
-    // .setInteractive()
-    this.events.on('round', (value) => {
-      // console.log('round теперь', value)
-
-      if (value) {
-        this.buttonCash.setTexture('button_cash')
-        this.buttonCash.setAlpha(1)
-        // this.cashOutShadow.show(0)
-        // this.stakeCounter.clearTint() // dev
-      } else {
-        // this.buttonCash.setAlpha(0.8)
-      }
-    })
-
-    this.buttonRect = this.add
-      .rectangle(this.sceneCenterX, this.buttonY, 280, 120, 0x00ccff)
-      .setOrigin(0.5)
-      .setFillStyle(0x000000, 0)
-      .setInteractive({ useHandCursor: false }) // курсор-рука при наведении
-
-    this.buttonRect.addListener('pointerdown', () => {
-      //   console.log('buttonRect clicked')
-      handleCashClick.call(this)
-    })
-
-    function handleCashClick() {
-      // console.log('handleCashClick', this.allowCashOut)
-
-      if (this.allowCashOut) {
-        // обработка вывода денег
-        this.allowCashOut = false
-        this.sounds.heart.play()
-        this.moneyCounterUpdate(this.stakeCount)
-        this.outCounter += this.stakeCount
-        this.buttonCash.setTexture('button_out')
-        this.stakeCounter.setTint(0xff0000) // dev
-        // this.cashOutShadow.show(1)
-        // console.log(
-        //   'rounds',
-        //   this.roundCounter,
-        //   'out ave',
-        //   this.outCounter / this.roundCounter,
-        //   'balance',
-        //   this.outCounter - this.roundCounter * this.currentBetValue,
-        //   'RTP%',
-        //   (this.outCounter / (this.roundCounter * this.currentBetValue)) * 100
-        // )
-      }
-    }
-
-    this.buttonAuto = this.add
-      .image(this.buttonIndent, this.buttonY, 'button_auto')
-      .setOrigin(0.5, 0.5)
-      .setScale(0.8)
-
-    this.add
-      .text(
-        this.buttonAuto.x,
-        this.buttonAuto.y - this.buttonNameSpacing,
-        'AUTO',
-        {
-          fontFamily: 'AvenirNextCondensedBold',
-          fontSize: '18px',
-          color: '#13469A',
-        }
-      )
-      .setOrigin(0.5, 0)
-
-    this.buttonTuner = this.add
-      .image(
-        this.sceneCenterX * 2 - this.buttonIndent,
-        this.buttonY,
-        'button_tuner'
-      )
-      .setOrigin(0.5, 0.5)
-      .setScale(0.8)
-      .setInteractive()
-      .addListener('pointerdown', () => {
-        // console.log('buttonTuner clicked')
-        this.riskTuner.show(true)
-      })
-
-    this.add
-      .text(
-        this.buttonTuner.x,
-        this.buttonTuner.y - this.buttonNameSpacing,
-        'TUNER',
-        {
-          fontFamily: 'AvenirNextCondensedBold',
-          fontSize: '18px',
-          color: '#13469A',
-        }
-      )
-      .setOrigin(0.5, 0)
-
-    this.buttonRules = this.add
-      .image(
-        this.sceneCenterX,
-        13 * this.gridUnit, // нужно в блок всё собрать!!!
-        'button_rules'
-      )
-      .setOrigin(0.5, 0.5)
-      .setDepth(200)
-      .setAlpha(1)
-  }
   createStartCounter() {
     this.startCounter = this.add
       .text(this.sceneCenterX, 6 * this.gridUnit, '', {
@@ -293,146 +239,6 @@ export default class GameScene extends Phaser.Scene {
       //   this.startCounter.setAlpha(0)
       // }
     }
-  }
-  createStakeCounter_() {
-    this.currentBetValue = this.initialBet // dev
-
-    this.stakeCounter = this.add
-      .text(this.sceneCenterX, 10 * this.gridUnit, '', {
-        font: '40px walibi',
-        fill: 'white', // цвет '#FC03B5'
-        stroke: 'black', // обводка
-        strokeThickness: 3, // толщина обводки
-      })
-      .setOrigin(0.5)
-      .setAlign('center')
-      .setAlpha(1)
-
-    // this.cashOutShadow = this.add
-    //   .text(this.sceneCenterX, 10.5 * this.gridUnit, '', {
-    //     font: '32px walibi',
-    //     fill: 'rgba(0,0,0,0)', // цвет '#FC03B5'
-    //     stroke: 'red', // обводка
-    //     strokeThickness: 6, // толщина обводки
-    //   })
-    //   .setOrigin(0.5)
-    //   .setAlign('center')
-    //   .setAlpha(1)
-    //   .setVisible(0)
-    // this.cashOutShadow.show = (state) => {
-    //   this.cashOutShadow.alpha = state
-    // }
-
-    this.stakeCounterUpdate = function (value) {
-      if (value) {
-        this.stakeCount = this.currentBetValue * value // добавляем к ставке
-      } else {
-        this.stakeCount = this.currentBetValue // сброс ставки
-      }
-      this.stakeCounter.setText(this.stakeCount.toFixed(2))
-      // this.cashOutShadow.setText(this.stakeCount.toFixed(2))
-    }
-
-    // в модуль или на сервер / JSON
-    const betValues = []
-
-    const rows = [
-      { start: 0.1, step: 0.1, count: 9 },
-      { start: 1, step: 1, count: 9 },
-      { start: 10, step: 5, count: 8 },
-      { start: 50, step: 10, count: 5 },
-      { start: 100, step: 25, count: 4 },
-      { start: 200, step: 50, count: 17 },
-    ]
-
-    for (const row of rows) {
-      for (let i = 0; i < row.count; i++) {
-        betValues.push(Number((row.start + i * row.step).toFixed(2)))
-      }
-    }
-    // console.table(betValues)
-
-    // new slider
-    // this.sliderBet = new BetSlider(
-    //   this,
-    //   this.sceneCenterX,
-    //   10 * this.gridUnit,
-    //   betValues,
-    //   (value) => {
-    //     this.currentBetValue = value
-    //     this.stakeCounter.setText(value.toFixed(2))
-    //   }
-    // )
-
-    // this.sliderBet.setValue(this.currentBetValue)
-
-    // new + & - buttons
-
-    this.buttonBetMinus = this.add
-      .image(2 * this.gridUnit, this.stakeCounter.y, 'button_bet_minus')
-      .setOrigin(0.5, 0.5)
-      .setScale(1)
-
-    this.buttonBetPlus = this.add.image(
-      this.sceneCenterX * 2 - 2 * this.gridUnit,
-      this.stakeCounter.y,
-      'button_bet_plus'
-    )
-  }
-  createStakeCounter() {
-    this.stakeCounter = this.add
-      .text(this.sceneCenterX, 10 * this.gridUnit, '', {
-        font: '40px walibi',
-        fill: 'white', // цвет '#FC03B5'
-        stroke: 'black', // обводка
-        strokeThickness: 3, // толщина обводки
-      })
-      .setOrigin(0.5)
-      .setAlign('center')
-
-    this.stakeCounterUpdate = function (value) {
-      if (value) {
-        this.stakeCount = this.currentBetValue * value // добавляем к ставке
-      } else {
-        this.stakeCount = this.currentBetValue // сброс ставки
-      }
-      this.stakeCounter.setText(this.stakeCount.toFixed(2))
-      // this.cashOutShadow.setText(this.stakeCount.toFixed(2))
-    }
-    this.stakeCounterSet = function (value) {
-      if (!isNaN(value)) this.stakeCounter.setText(value.toFixed(2))
-    }
-
-    const betValues = []
-
-    const rows = [
-      { start: 0.1, step: 0.1, count: 9 },
-      { start: 1, step: 1, count: 9 },
-      { start: 10, step: 5, count: 8 },
-      { start: 50, step: 10, count: 5 },
-      { start: 100, step: 25, count: 4 },
-      { start: 200, step: 50, count: 17 },
-    ]
-
-    for (const row of rows) {
-      for (let i = 0; i < row.count; i++) {
-        betValues.push(Number((row.start + i * row.step).toFixed(2)))
-      }
-    }
-    this.currentBetValue = this.initialBet
-
-    this.betStepper = new BetStepper(
-      this,
-      this.sceneCenterX,
-      10 * this.gridUnit,
-      betValues,
-      (value) => {
-        this.currentBetValue = value
-        this.stakeCounterSet(value)
-      }
-    )
-
-    this.betStepper.setValue(this.currentBetValue)
   }
   createMoneyCounter() {
     // this.add
@@ -519,14 +325,27 @@ export default class GameScene extends Phaser.Scene {
       // console.log('FSM state:', state)
       switch (state) {
         case 'COUNTDOWN':
-          // this.handleCountdown()
+          this.events.emit('gameState', {
+            mode: 'COUNTDOWN',
+            betValue: this.currentBetValue,
+          })
           this.countdown()
           break
         case 'ROUND':
-          // this.handleRunning()
+          this.events.emit('gameState', {
+            mode: 'ROUND',
+            hasBet: this.hasBet,
+          })
           this.round()
           break
         case 'FINISH':
+          this.events.emit('gameState', {
+            mode: 'FINISH',
+            hasBet: this.hasBet,
+            hasCashOut: this.hasCashOut,
+            cashOutAllowed: this.cashOutAllowed,
+            stakeValue: this.stakeValue,
+          })
           this.finish()
           break
       }
@@ -535,19 +354,19 @@ export default class GameScene extends Phaser.Scene {
   // round machine
   countdown() {
     // console.time('Time to betting')
-    //
-    this.stakeCounterUpdate() // не здесь...
-    this.stakeCounter.clearTint()
+    if (this.pendingBetValue) {
+      // можно проверить предварительную ставку
+    }
 
-    // this.betAllowed = true // разрешаем ставить
-    // this.sliderBet.setActive(this.betAllowed)
-
+    this.hasBet = false
+    this.hasCashOut = false
     this.setBetAllowed(true)
 
     if (this.pendingRiskSetting) {
       this.handleNewSettings(this.pendingRiskSetting)
       this.platforms.updatePlatforms(this.crashTable)
     }
+    this.stakeValue = 0 // здесь??
 
     let countDown = 8
     let roundPrepareDelay = 3000 // подбор на 6 - 1500
@@ -558,9 +377,7 @@ export default class GameScene extends Phaser.Scene {
       callback: () => {
         countDown--
         if (countDown == 0) {
-          this.setBetAllowed(false)
-          // this.betAllowed = false
-          // this.sliderBet.setActive(this.betAllowed)
+          // this.setBetAllowed(false)
 
           this.startCounterUpdate('GO!')
           // спрятать GO
@@ -600,10 +417,8 @@ export default class GameScene extends Phaser.Scene {
 
         this.background.move()
         this.roundCounter++
-        this.moneyCounterUpdate(-this.currentBetValue)
+        // this.moneyCounterUpdate(-this.currentBetValue)
 
-        this.events.emit('round', true) // нужно?
-        // this.betAllowed = false
         this.fsm.toRound()
       },
     })
@@ -611,6 +426,7 @@ export default class GameScene extends Phaser.Scene {
   round() {
     // console.timeEnd('Time to betting')
     // console.time('Round time')
+    // console.log('round', this.stakeValue)
     this.ball.fall(() => {
       this.bounceHandler()
     })
@@ -621,8 +437,20 @@ export default class GameScene extends Phaser.Scene {
     // ещё надо чекать последнюю платформу
     if (this.isCrashed) this.fsm.toFinish()
     else {
+      const multiplier = this.crashTable[this.bounceCount].multiplier
+      this.stakeValue = this.currentBetValue * multiplier
+
+      this.events.emit('gameAction', {
+        mode: 'BOUNCE',
+        count: this.bounceCount,
+        multiplier: multiplier,
+        stakeValue: this.stakeValue,
+        hasBet: this.hasBet,
+      })
+      // this.stakeCounterUpdate(this.crashTable[this.bounceCount].multiplier)
+
+      // платформы ловят эвент сам
       this.platforms.hidePlatform(this.bounceCount)
-      this.stakeCounterUpdate(this.crashTable[this.bounceCount].multiplier)
       this.bounceCount++
       this.platforms.moveNextPlatforms(this.bounceCount)
       // на новый цикл
@@ -630,20 +458,19 @@ export default class GameScene extends Phaser.Scene {
         this.bounceHandler()
       })
       // кнопку в отдельный модуль и добавить BET
-      if (this.bounceCount === 1 && !this.allowCashOut) {
-        this.allowCashOut = true // нужно после первой платформы (или второй?)
-        // this.events.emit('allowCashOutChanged', this.allowCashOut)
+      if (this.bounceCount === 1 && !this.cashOutAllowed) {
+        // this.cashOutAllowed = true // нужно после первой платформы (или второй?)
+        this.setCashOutAllowed(true)
       }
     }
   }
   finish() {
-    // console.log('this.allowCashOut', this.allowCashOut)
-    if (this.allowCashOut) this.stakeCounterSet(0)
+    // console.log('this.cashOutAllowed', this.cashOutAllowed)
+
     this.stopMoving(this.bounceCount)
     this.sounds.dropCoin.play()
-    this.allowCashOut = false
-    this.events.emit('round', false) // нужно?
-    // this.countdown()
+    this.setCashOutAllowed(false)
+
     this.time.addEvent({
       delay: 1500,
       callback: () => {
@@ -653,51 +480,28 @@ export default class GameScene extends Phaser.Scene {
     })
   }
   // вспомогательные методы
+  setCashOutAllowed(state) {
+    if (this.cashOutAllowed === state) return
+    this.cashOutAllowed = state
+    this.events.emit('gameAction', {
+      mode: 'CASHOUT_ALLOWED',
+      cashOutAllowed: state,
+      hasBet: this.hasBet,
+    })
+  }
   setBetAllowed(state) {
     if (this.betAllowed === state) return
     this.betAllowed = state
-    // this.sliderBet.setActive(state)
-    this.betStepper.setEnabled(state)
+    this.events.emit('gameAction', {
+      mode: 'BET_ALLOWED',
+      betAllowed: state,
+    })
   }
   handleNewSettings(settings) {
     this.currentRiskSetting = { ...settings }
     this.crashTable = this.generateCrashTable(this.currentRiskSetting)
     this.newRiskSettingNotice.show(settings)
     this.pendingRiskSetting = null
-  }
-  initCrashIndex() {
-    let random = Math.random()
-    // random = 0.9999999999999 // dev
-    let multiplier = null
-    let index = 0
-    let acc = 0
-    function getCrashIndex(crashTable) {
-      for (let i = 0; i < crashTable.length; i++) {
-        // acc += crashTable[i].probability
-        if (random < crashTable[i].acc) {
-          acc = crashTable[i].acc
-          multiplier = crashTable[i].multiplier
-          index = i
-          return i
-        }
-      }
-      // return crashTable.length // fallback - проверить
-    }
-    this.crashIndex = getCrashIndex(this.crashTable) // следующий будет краш!
-    this.crashIndex > 0 ? (this.crashIndex += 1) : 0
-    // console.log(
-    //   'random',
-    //   random,
-    //   'acc',
-    //   acc,
-    //   'index',
-    //   index,
-    //   'crashIndex',
-    //   this.crashIndex,
-    //   'multiplier',
-    //   multiplier
-    // )
-    return this.crashIndex
   }
   checkCrash() {
     // console.log('checkCrash', this.bounceCount)
@@ -818,5 +622,39 @@ export default class GameScene extends Phaser.Scene {
     }
     console.table(result)
     console.log('ave RTP', RTP / (crashTable.length - 1))
+  }
+  initCrashIndex() {
+    let random = Math.random()
+    // random = 0.9999999999999 // dev
+    let multiplier = null
+    let index = 0
+    let acc = 0
+    function getCrashIndex(crashTable) {
+      for (let i = 0; i < crashTable.length; i++) {
+        // acc += crashTable[i].probability
+        if (random < crashTable[i].acc) {
+          acc = crashTable[i].acc
+          multiplier = crashTable[i].multiplier
+          index = i
+          return i
+        }
+      }
+      // return crashTable.length // fallback - проверить
+    }
+    this.crashIndex = getCrashIndex(this.crashTable) // следующий будет краш!
+    this.crashIndex > 0 ? (this.crashIndex += 1) : 0
+    // console.log(
+    //   'random',
+    //   random,
+    //   'acc',
+    //   acc,
+    //   'index',
+    //   index,
+    //   'crashIndex',
+    //   this.crashIndex,
+    //   'multiplier',
+    //   multiplier
+    // )
+    return this.crashIndex
   }
 }

@@ -10,7 +10,7 @@ export class BetStepper {
   constructor(scene, centerX, y, betValues, onValueChange) {
     this.scene = scene
     this.betValues = betValues
-    this.onValueChange = onValueChange
+    // this.onValueChange = onValueChange
     this.currentIndex = 0
     this.isEnabled = true
 
@@ -36,15 +36,21 @@ export class BetStepper {
   changeValue(delta) {
     if (!this.isEnabled) return
 
-    this.currentIndex = Phaser.Math.Clamp(
+    const newIndex = Phaser.Math.Clamp(
       this.currentIndex + delta,
       0,
       this.betValues.length - 1
     )
+    // console.log('BetStepper changeValue', this.currentIndex, newIndex)
+    if (newIndex !== this.currentIndex) this.currentIndex = newIndex
+    else return
 
-    if (this.onValueChange) {
-      this.onValueChange(this.betValues[this.currentIndex])
-    }
+    // if (this.onValueChange) {
+    //   this.onValueChange(this.betValues[this.currentIndex])
+    // }
+    const betValue = this.betValues[this.currentIndex]
+    // console.log('BetStepper changeValue', this.currentIndex, betValue)
+    this.scene.events.emit('betChanged', betValue)
   }
 
   /**
@@ -62,6 +68,7 @@ export class BetStepper {
     if (this.onValueChange) {
       this.onValueChange(this.betValues[this.currentIndex])
     }
+    // console.log('BetStepper setValue', value, this.currentIndex)
   }
 
   /**
