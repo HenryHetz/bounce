@@ -2,18 +2,18 @@ import {
   generateMinPayoutArray,
   generateMaxPayoutArray,
   generateStepsArray,
-} from './RiskTunerData'
-import { RiskSlider } from './RiskSlider'
-import { RiskChart } from './RiskChart'
+} from './Data'
+import { Slider } from './Slider'
+import { Chart } from './Chart'
 import {
   normalize,
   getDiscreteValue,
   getSliderValue,
   setSliderValue,
-} from './RiskTunerUtils'
+} from './Utils'
 
-export class RiskTunerPanel {
-  constructor(scene, riskSetting) {
+export class Panel {
+  constructor(scene, setting) {
     this.scene = scene
 
     // --- Генерируем массивы дискретных значений
@@ -24,10 +24,10 @@ export class RiskTunerPanel {
     }
 
     // --- Основные состояния
-    this.defaultRiskSetting = { ...riskSetting }
-    this.currentRiskSetting = { ...riskSetting }
-    this.draftRiskSetting = { ...riskSetting }
-    this.previousDraftValues = { ...riskSetting }
+    this.defaultRiskSetting = { ...setting }
+    this.currentRiskSetting = { ...setting }
+    this.draftRiskSetting = { ...setting }
+    this.previousDraftValues = { ...setting }
 
     // --- Контейнер для всего UI
     this.container = scene.add.container(0, 0).setDepth(20).setVisible(false)
@@ -41,7 +41,7 @@ export class RiskTunerPanel {
 
     // --- Фон (теперь интерактивный, вместо старого vail)
     this.bg = scene.add
-      .image(0, 80, 'tuner_bg')
+      .image(0, 0, 'auto_bg')
       .setOrigin(0)
       .setAlpha(1)
       .setInteractive()
@@ -52,7 +52,7 @@ export class RiskTunerPanel {
     //   .setOrigin(0.5)
 
     this.naming = scene.add
-      .text(scene.sceneCenterX - 200, scene.gridUnit * 1.8, '#RISK_TUNER', {
+      .text(scene.sceneCenterX - 200, scene.gridUnit * 1.8, '#AUTO_BETTING', {
         fontSize: '38px',
         color: '#FDD41D',
         fontFamily: 'walibi',
@@ -73,16 +73,16 @@ export class RiskTunerPanel {
         `Steps_${setting.steps}`,
         `Min_X_${setting.minPayout}`,
         `Max_X_${setting.maxPayout}`,
-        `EDGE_1%`, // ${scene.houseEdge}
+        `EDGE_${scene.houseEdge}%`, // ${scene.houseEdge}
       ]
       this.notation.setText(lines)
     }
 
     // --- Чарт
-    this.chart = new RiskChart(scene, 120, 7 * scene.gridUnit)
+    this.chart = new Chart(scene, 120, 7 * scene.gridUnit)
 
     // --- Слайдеры
-    this.slider1 = new RiskSlider(
+    this.slider1 = new Slider(
       scene,
       320,
       9 * scene.gridUnit,
@@ -90,7 +90,7 @@ export class RiskTunerPanel {
       this.settingArrays.minPayout[0],
       this.settingArrays.minPayout[this.settingArrays.minPayout.length - 1]
     )
-    this.slider2 = new RiskSlider(
+    this.slider2 = new Slider(
       scene,
       320,
       10 * scene.gridUnit,
@@ -98,7 +98,7 @@ export class RiskTunerPanel {
       this.settingArrays.maxPayout[0],
       this.settingArrays.maxPayout[this.settingArrays.maxPayout.length - 1]
     )
-    this.slider3 = new RiskSlider(
+    this.slider3 = new Slider(
       scene,
       320,
       8 * scene.gridUnit,

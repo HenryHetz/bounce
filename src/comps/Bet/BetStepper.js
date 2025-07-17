@@ -14,7 +14,7 @@ export class BetStepper {
     this.currentIndex = 0
     this.isEnabled = true
 
-    const spacing = scene.gridUnit * 2
+    const spacing = scene.gridUnit * 2 - 20
 
     // MINUS button
     this.minusButton = scene.add

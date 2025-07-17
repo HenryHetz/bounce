@@ -1,20 +1,15 @@
 import { DEFAULT_RISK_SETTING } from '../constants/riskConstants'
 import { Background } from '../comps/Background'
 import { RiskTunerPanel } from '../comps/RiskTuner/RiskTunerPanel'
-// import { RiskSlider } from '../comps/RiskTuner/RiskSlider'
-// import { BetSlider } from '../comps/Bet/BetSlider'
-// import { BetStepper } from '../comps/Bet/BetStepper'
-// import {
-//   normalize,
-//   getDiscreteValue,
-//   getSliderValue,
-//   setSliderValue,
-// } from '../comps/RiskTuner/RiskTunerUtils'
+import { Panel } from '../comps/Auto/Panel'
+
+import { BetValues } from '../comps/Bet/BetValues'
 
 import { Ball } from '../comps/Ball'
 import { Platforms } from '../comps/Platforms'
 import { FSM } from '../comps/FSM'
 import { GameControlPanel } from '../comps/GameControlPanel'
+import { on } from 'ws'
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
@@ -37,10 +32,16 @@ export default class GameScene extends Phaser.Scene {
 
     this.duration = 500
 
-    this.bounceCount = 0 // отскоков
-    this.deposit = 10000 // начальная сумма
-    this.initialBet = 1 // начальная ставка
+    this.betValues = BetValues // dev
+    this.initialBet = 10 // начальная ставка
     this.currentBetValue = this.initialBet // текущая ставка
+    this.pendingBetValue = null // для проверки ставки перед началом раунда
+
+    this.bounceCount = 0 // отскоков
+
+    this.initialDeposit = 10000 // начальная ставка
+    this.currentDeposit = this.initialDeposit // начальная сумма
+
     this.stakeValue = 0 // ставка начальная пока
 
     this.hasCashOut = false
@@ -50,8 +51,6 @@ export default class GameScene extends Phaser.Scene {
 
     this.roundCounter = 0 // счетчик раундов
 
-    // dev
-    this.tweens.timeScale = 1
     this.houseEdge = 1
 
     this.defaultRiskSetting = DEFAULT_RISK_SETTING
@@ -61,12 +60,14 @@ export default class GameScene extends Phaser.Scene {
     this.crashTable = this.generateCrashTable(this.defaultRiskSetting)
     // dev
     // this.checkMath(this.crashTable)
+    this.tweens.timeScale = 1
   }
   create() {
     this.background = new Background(this)
+    this.createUI() // dev
+    this.createParticles() // эммитер передается в Ball
+
     this.createStartCounter()
-    this.createParticles()
-    this.createUI()
     this.createMoneyCounter()
 
     this.ball = new Ball(this, this.emitter)
@@ -74,10 +75,12 @@ export default class GameScene extends Phaser.Scene {
     this.platforms.updatePlatforms(this.crashTable)
 
     this.riskTuner = new RiskTunerPanel(this, this.defaultRiskSetting)
+    this.autoSetting = new Panel(this, this.defaultRiskSetting)
 
     this.gameControlPanel = new GameControlPanel(this, {
       onCash: () => this.handleButtonClick(),
       onTuner: () => this.riskTuner.show(true),
+      onAuto: () => this.autoSetting.show(true),
     })
 
     if (!this.sounds) this.createSounds()
@@ -267,7 +270,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     this.moneyCounter = this.add
-      .text(450, 40, this.deposit.toFixed(2), {
+      .text(450, 40, this.currentDeposit.toFixed(2), {
         font: '24px walibi',
         fill: 'white', // цвет '#FC03B5'
         // stroke: 'black', // обводка
@@ -280,11 +283,18 @@ export default class GameScene extends Phaser.Scene {
 
     this.moneyCounterUpdate = function (value) {
       if (value) {
-        this.deposit += value // добавляем к ставке
+        this.currentDeposit += value // добавляем к ставке
       } else {
         // this.moneyCounter
       }
-      this.moneyCounter.setText(this.deposit.toFixed(2))
+      // депозит не может быть меньше нуля (var1)
+      if (this.currentDeposit <= 0)
+        this.currentDeposit = this.initialDeposit + this.currentDeposit
+      // или не меньше максимальной ставки (var2)
+      // if (this.currentDeposit <= this.betValues[this.betValues.length - 1])
+      //   this.currentDeposit = this.initialDeposit
+
+      this.moneyCounter.setText(this.currentDeposit.toFixed(2))
       if (value > 0) this.skull.shake()
     }
   }

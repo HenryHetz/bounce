@@ -1,5 +1,6 @@
 // GameControlPanel.js
 import { BetStepper } from './Bet/BetStepper'
+// import { BetValues } from './Bet/BetValues'
 
 export class GameControlPanel {
   constructor(scene, config) {
@@ -12,15 +13,12 @@ export class GameControlPanel {
     this.onAuto = config.onAuto
 
     this.createElements()
-    this.registerHandlers()
     this.createEvents()
   }
-
   createElements() {
     const buttonY = 11.5 * this.gridUnit
     const indent = 100
     const nameSpacing = 60
-
     // StakeCounter
     this.stakeCounter = this.scene.add
       .text(this.centerX, 10 * this.gridUnit, '', {
@@ -39,13 +37,14 @@ export class GameControlPanel {
       this.scene.betValues
     )
 
-    // Cash Button
+    // Main Cash Button
     this.buttonAction = this.scene.add
       .image(this.centerX, buttonY, 'button_red')
       .setOrigin(0.5)
       .setInteractive()
-      .on('pointerdown', () => this.onCash?.())
-
+      .on('pointerdown', () => {
+        this.onCash && this.onCash()
+      })
     this.buttonActionLabel = this.scene.add
       .text(this.buttonAction.x, this.buttonAction.y, 'BET', {
         font: '40px walibi',
@@ -53,14 +52,13 @@ export class GameControlPanel {
       })
       .setOrigin(0.5)
       .setAlign('center')
-
     // Auto Button
     this.buttonAuto = this.scene.add
       .image(indent, buttonY, 'button_auto')
       .setOrigin(0.5)
       .setScale(0.8)
       .setInteractive()
-      .on('pointerdown', () => this.onAuto?.())
+      .on('pointerdown', () => this.onAuto && this.onAuto())
 
     this.autoLabel = this.scene.add
       .text(indent, buttonY - nameSpacing, 'AUTO', {
@@ -76,7 +74,7 @@ export class GameControlPanel {
       .setOrigin(0.5)
       .setScale(0.8)
       .setInteractive()
-      .on('pointerdown', () => this.onTuner?.())
+      .on('pointerdown', () => this.onTuner && this.onTuner())
 
     this.tunerLabel = this.scene.add
       .text(this.buttonTuner.x, this.buttonTuner.y - nameSpacing, 'TUNER', {
@@ -86,125 +84,83 @@ export class GameControlPanel {
       })
       .setOrigin(0.5, 0)
 
-    // Rules Button
+    // Rules/Info Block
     this.buttonRules = this.scene.add
       .image(this.centerX, 13 * this.gridUnit, 'button_rules')
       .setOrigin(0.5)
       .setDepth(200)
   }
-
   createEvents() {
     this.scene.events.on('gameState', (data) => {
-      this.handleEvent(data.mode, data)
+      this.handleGameState(data)
     })
     this.scene.events.on('gameAction', (data) => {
-      this.handleEvent(data.mode, data)
+      this.handleGameAction(data)
     })
   }
 
-  handleEvent(type, data) {
-    const handler = this.handlers[type]
-    if (handler) {
-      handler.call(this, data)
-    } else {
-      console.warn(`[GameControlPanel] No handler for event: ${type}`)
+  handleGameState(data) {
+    // console.log('gameState', data)
+    if (data.mode === 'COUNTDOWN') {
+      // buttonAction
+      this.buttonAction.setTexture('button_red')
+      this.buttonAction.setAlpha(1)
+      //   this.buttonActionLabel.setText('BET')
+      //   this.buttonActionLabel.setStyle({ fill: 'black' })
+      this.updateActionLabel('BET', 'black')
+
+      this.stakeCounter.clearTint()
+      this.betStepper.setValue(data.betValue)
+      this.updateStakeText(data.betValue)
+    }
+    if (data.mode === 'ROUND') {
+      if (!data.hasBet) {
+        // this.buttonAction.setTexture('button_cash')
+        this.buttonAction.setAlpha(0.7)
+      }
+    }
+    if (data.mode === 'FINISH') {
+      //   console.log('gameState FINISH', data)
+      if (!data.hasCashOut && data.hasBet) this.updateStakeText(0)
     }
   }
+  handleGameAction(data) {
+    // console.log('gameAction', data)
+    if (data.mode === 'CASHOUT') {
+      this.buttonAction.setTexture('button_black')
+      //   this.buttonActionLabel.setText('OUT')
+      //   this.buttonActionLabel.setStyle({ fill: '#ff0000' })
+      this.updateActionLabel('OUT', '#ff0000')
 
-  registerHandlers() {
-    this.handlers = {
-      // GameState
-      COUNTDOWN: this.onCountdown,
-      ROUND: this.onRound,
-      FINISH: this.onFinish,
-
-      // GameAction
-      CASHOUT: this.onCashout,
-      CASHOUT_ALLOWED: this.onCashoutAllowed,
-      BET_CHANGED: this.onBetChanged,
-      BET_ALLOWED: this.onBetAllowed,
-      BET: this.onBet,
-      BOUNCE: this.onBounce,
+      this.stakeCounter.setTint(0xff0000) // dev
     }
-  }
-
-  // ==== Handlers ====
-
-  onCountdown(data) {
-    // this.buttonAction.setTexture('button_red')
-    // this.buttonAction.setAlpha(1)
-    this.updateActionButton('button_red')
-    this.updateActionLabel('BET', 'black')
-
-    this.stakeCounter.clearTint()
-    this.betStepper.setValue(data.betValue)
-    this.updateStakeText(data.betValue)
-  }
-
-  onRound(data) {
-    if (!data.hasBet) {
+    if (data.mode === 'CASHOUT_ALLOWED') {
+      if (data.cashOutAllowed && data.hasBet) {
+        this.buttonAction.setTexture('button_red')
+        this.buttonAction.setAlpha(1)
+        // this.buttonActionLabel.setText('CASH')
+        this.updateActionLabel('CASH')
+      }
+    }
+    if (data.mode === 'BET_CHANGED') {
+      this.updateStakeText(data.betValue)
+    }
+    if (data.mode === 'BET_ALLOWED') {
+      this.setBetAllowed(data.betAllowed)
+    }
+    if (data.mode === 'BET') {
+      //   this.setBetAllowed(false)
       this.buttonAction.setAlpha(0.7)
     }
-  }
-
-  onFinish(data) {
-    if (!data.hasCashOut && data.hasBet) {
-      this.updateStakeText(0)
+    if (data.mode === 'BOUNCE') {
+      if (data.count > 0 && data.hasBet) this.updateStakeText(data.stakeValue)
     }
   }
-
-  onCashout() {
-    // this.buttonAction.setTexture('button_black')
-    this.updateActionLabel('OUT', '#ff0000')
-    this.updateActionButton('button_black')
-
-    this.stakeCounter.setTint(0xff0000)
-  }
-
-  onCashoutAllowed(data) {
-    if (data.cashOutAllowed && data.hasBet) {
-      //   this.buttonAction.setTexture('button_red')
-      //   this.buttonAction.setAlpha(1)
-      this.updateActionButton('button_red')
-
-      this.updateActionLabel('CASH')
-    }
-  }
-
-  onBetChanged(data) {
-    this.updateStakeText(data.betValue)
-  }
-
-  onBetAllowed(data) {
-    this.setBetAllowed(data.betAllowed)
-  }
-
-  onBet() {
-    this.buttonAction.setAlpha(0.7)
-  }
-
-  onBounce(data) {
-    if (data.count > 0 && data.hasBet) {
-      this.updateStakeText(data.stakeValue)
-    }
-  }
-
-  // ==== Helpers ====
-
+  /** Set initial/current bet value */
   setStakeValue(value) {
+    // this.currentBetValue = value
     this.betStepper.setValue(value)
     this.updateStakeText(value)
-  }
-
-  updateStakeText(value) {
-    if (typeof value === 'number' && !isNaN(value)) {
-      this.stakeCounter.setText(value.toFixed(2))
-    }
-  }
-
-  updateActionButton(texture, alpha = 1) {
-    this.buttonAction.setTexture(texture)
-    this.buttonAction.setAlpha(alpha)
   }
 
   updateActionLabel(text, fill = 'black') {
@@ -212,8 +168,17 @@ export class GameControlPanel {
     this.buttonActionLabel.setStyle({ fill })
   }
 
+  /** Update stake text directly */
+  updateStakeText(value) {
+    if (typeof value === 'number' && !isNaN(value)) {
+      this.stakeCounter.setText(value.toFixed(2))
+    }
+  }
+
+  /** Enable or disable betting */
   setBetAllowed(state) {
     this.betStepper.setEnabled(state)
+    // this.buttonAction.setAlpha(state ? 1 : 0.5)
     this.buttonAction.setInteractive(state)
   }
 }

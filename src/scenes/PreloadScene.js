@@ -72,15 +72,25 @@ export default class PreloadScene extends Phaser.Scene {
     })
   }
   preloadAssets() {
-    // main
-    this.load.image('risk_bg', 'assets/sprites/bg/risk_bg.png')
+    // dev
+    this.load.image('dev_ui', 'assets/sprites/dev/drops_ui_5.png')
+    this.load.image('grid', 'assets/sprites/dev/grid.png')
+    // bg
     this.load.image('main_bg', 'assets/sprites/bg/bg_8.png')
+    this.load.image('tuner_bg', 'assets/sprites/bg/tuner_bg.png')
+    this.load.image('auto_bg', 'assets/sprites/bg/auto_bg_2.png')
     // elements
     this.load.image('ball', 'assets/sprites/elements/ball_2.png')
     this.load.image('platform', 'assets/sprites/elements/platform_2.png')
     this.load.image('button_cash', 'assets/sprites/elements/button_cash.png')
     this.load.image('button_out', 'assets/sprites/elements/button_out.png')
     this.load.image('button_bet', 'assets/sprites/elements/button_bet.png')
+    this.load.image('button_red', 'assets/sprites/elements/button_red.png')
+    this.load.image('button_black', 'assets/sprites/elements/button_black.png')
+    this.load.image(
+      'button_yellow',
+      'assets/sprites/elements/button_yellow.png'
+    )
     this.load.image(
       'button_rules',
       'assets/sprites/elements/button_rules_3.png'
@@ -115,11 +125,6 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.image('risk_tuner', 'assets/sprites/elements/risk_tuner.png')
     this.load.image('skull', 'assets/sprites/elements/skull_.png')
     this.load.image('volume_bar', 'assets/sprites/elements/volume_bar.png')
-
-    // dev
-    this.load.image('dev_ui', 'assets/sprites/dev/DROPS_3.png')
-    this.load.image('grid', 'assets/sprites/dev/grid.png')
-    // this.load.image('DROPS_3', 'assets/sprites/DROPS_3.png')
 
     // sounds
     this.load.audio('dropCoin', 'assets/sounds/dropCoin.mp3')
