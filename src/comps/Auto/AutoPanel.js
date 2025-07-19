@@ -12,7 +12,7 @@ import {
   setSliderValue,
 } from './Utils'
 
-export class Panel {
+export class AutoPanel {
   constructor(scene, setting) {
     this.scene = scene
 
@@ -41,7 +41,7 @@ export class Panel {
 
     // --- Фон (теперь интерактивный, вместо старого vail)
     this.bg = scene.add
-      .image(0, 0, 'auto_bg')
+      .image(0, 80, 'auto_bg')
       .setOrigin(0)
       .setAlpha(1)
       .setInteractive()
@@ -109,13 +109,13 @@ export class Panel {
 
     // --- Кнопки
     this.buttonClose = scene.add
-      .image(640 - scene.buttonIndent, scene.buttonY, 'button_close')
+      .image(scene.buttonIndent, scene.buttonY, 'button_close')
       .setOrigin(0.5)
       .setScale(0.8)
       .setInteractive()
 
     this.buttonReset = scene.add
-      .image(scene.buttonIndent, scene.buttonY, 'button_reset')
+      .image(640 - scene.buttonIndent, scene.buttonY, 'button_reset')
       .setOrigin(0.5)
       .setScale(0.8)
       .setInteractive()
@@ -145,7 +145,7 @@ export class Panel {
       .text(
         this.buttonReset.x,
         this.buttonReset.y - scene.buttonNameSpacing,
-        'DEFAULT',
+        'RESET',
         {
           fontFamily: 'AvenirNextCondensedBold',
           fontSize: '18px',
@@ -231,9 +231,9 @@ export class Panel {
     })
 
     this.buttonCreate.on('pointerdown', () => {
-      if (this.isDraftChanged()) {
-        this.applyDraft()
-      }
+      // if (this.isDraftChanged()) {
+      //   this.applyDraft()
+      // }
     })
   }
 

@@ -1,7 +1,7 @@
 import { DEFAULT_RISK_SETTING } from '../constants/riskConstants'
 import { Background } from '../comps/Background'
 import { RiskTunerPanel } from '../comps/RiskTuner/RiskTunerPanel'
-import { Panel } from '../comps/Auto/Panel'
+import { AutoPanel } from '../comps/Auto/AutoPanel'
 
 import { BetValues } from '../comps/Bet/BetValues'
 
@@ -20,8 +20,8 @@ export default class GameScene extends Phaser.Scene {
     this.isCrashed = false // проигрыш
     this.gridUnit = 80
     this.sceneCenterX = this.cameras.main.centerX // центр сцены по X - через width найти
-    this.ballX = 120
-    this.ballY = 250
+    this.ballX = 160
+    this.ballY = 240
     this.platformY = this.gridUnit * 8
     this.distanceY = this.platformY - this.ballY
     // console.log('distance', this.distanceY)
@@ -36,6 +36,7 @@ export default class GameScene extends Phaser.Scene {
     this.initialBet = 10 // начальная ставка
     this.currentBetValue = this.initialBet // текущая ставка
     this.pendingBetValue = null // для проверки ставки перед началом раунда
+    this.autoBetting = false // автоигра
 
     this.bounceCount = 0 // отскоков
 
@@ -67,7 +68,7 @@ export default class GameScene extends Phaser.Scene {
     this.createUI() // dev
     this.createParticles() // эммитер передается в Ball
 
-    this.createStartCounter()
+    this.createCountdownCounter()
     this.createMoneyCounter()
 
     this.ball = new Ball(this, this.emitter)
@@ -75,7 +76,7 @@ export default class GameScene extends Phaser.Scene {
     this.platforms.updatePlatforms(this.crashTable)
 
     this.riskTuner = new RiskTunerPanel(this, this.defaultRiskSetting)
-    this.autoSetting = new Panel(this, this.defaultRiskSetting)
+    this.autoSetting = new AutoPanel(this, this.defaultRiskSetting)
 
     this.gameControlPanel = new GameControlPanel(this, {
       onCash: () => this.handleButtonClick(),
@@ -92,7 +93,7 @@ export default class GameScene extends Phaser.Scene {
     this.fsm.toCountdown()
 
     // dev
-    // this.createGrid()
+    this.createGrid()
   }
   handleButtonClick() {
     // console.log('handleButtonClick', this.cashOutAllowed)
@@ -217,9 +218,9 @@ export default class GameScene extends Phaser.Scene {
       .setAlpha(0)
       .setDepth(100)
   }
-  createStartCounter() {
-    this.startCounter = this.add
-      .text(this.sceneCenterX, 6 * this.gridUnit, '', {
+  createCountdownCounter() {
+    this.countdownCounter = this.add
+      .text(this.sceneCenterX, 7 * this.gridUnit, '', {
         font: '100px walibi',
         fill: 'red', // цвет '#FC03B5'
         // stroke: 'black', // обводка
@@ -229,17 +230,17 @@ export default class GameScene extends Phaser.Scene {
       .setAlign('center')
       .setAlpha(0)
 
-    this.startCounterUpdate = function (value) {
-      this.startCounter.setText(value)
+    this.countdownCounterUpdate = function (value) {
+      this.countdownCounter.setText(value)
     }
-    this.startCounterShow = function (show) {
-      //   console.log('startCounterShow', show)
+    this.countdownCounterShow = function (show) {
+      //   console.log('countdownCounterShow', show)
       // this.settingNotation.setAlpha(show)
-      this.startCounter.setAlpha(show)
+      this.countdownCounter.setAlpha(show)
       // if (show) {
-      //   this.startCounter.setAlpha(1)
+      //   this.countdownCounter.setAlpha(1)
       // } else {
-      //   this.startCounter.setAlpha(0)
+      //   this.countdownCounter.setAlpha(0)
       // }
     }
   }
@@ -389,17 +390,17 @@ export default class GameScene extends Phaser.Scene {
         if (countDown == 0) {
           // this.setBetAllowed(false)
 
-          this.startCounterUpdate('GO!')
+          this.countdownCounterUpdate('GO!')
           // спрятать GO
           this.time.addEvent({
             delay: 500,
             callback: () => {
-              this.startCounterShow(false)
+              this.countdownCounterShow(false)
             },
           })
         } else {
-          this.startCounterUpdate(countDown)
-          this.startCounterShow(true)
+          this.countdownCounterUpdate(countDown)
+          this.countdownCounterShow(true)
         }
       },
       repeat: countDown - 1,
@@ -425,7 +426,7 @@ export default class GameScene extends Phaser.Scene {
         this.isCrashed = false
         this.bounceCount = 0
 
-        this.background.move()
+        // this.background.move()
         this.roundCounter++
         // this.moneyCounterUpdate(-this.currentBetValue)
 
@@ -481,8 +482,11 @@ export default class GameScene extends Phaser.Scene {
     this.sounds.dropCoin.play()
     this.setCashOutAllowed(false)
 
+    // dev
+    this.platforms.setRed(this.bounceCount)
+
     this.time.addEvent({
-      delay: 1500,
+      delay: 2000,
       callback: () => {
         // console.timeEnd('Round time')
         this.fsm.toCountdown()
@@ -531,7 +535,7 @@ export default class GameScene extends Phaser.Scene {
     this.ball.stop()
     this.platforms.hideAndResetPlatforms(bounceCount)
     // this.stopBack()
-    this.background.stop()
+    // this.background.stop()
   }
 
   // вынести на сервер
@@ -635,7 +639,7 @@ export default class GameScene extends Phaser.Scene {
   }
   initCrashIndex() {
     let random = Math.random()
-    // random = 0.9999999999999 // dev
+    // let random = 0.9999999999999 // dev
     let multiplier = null
     let index = 0
     let acc = 0

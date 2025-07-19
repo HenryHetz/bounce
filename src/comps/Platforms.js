@@ -23,17 +23,31 @@ export class Platforms {
 
   createPlatforms() {
     const { scene } = this
-    const colors = [0xffffff, 0xb0e0e6]
+    const colors = [0xffffff, 0xffff00]
+
+    this.createGradientTexture('fadeRect', '255,255,255', 120, 160)
+    this.createGradientTexture('fadeRedRect', '255,0,0', 120, 160)
 
     for (let i = 0; i < this.count; i++) {
-      let color = colors[i % 2]
-      let platform = scene.add
-        .image(0, 0, 'platform')
+      const color = colors[i % 2]
+      // let platform = scene.add
+      //   .image(0, 0, 'platform')
+      //   .setScale(1)
+      //   .setTint(color)
+      //   .setOrigin(0.5, 0)
+      // пробуем нарисовать
+      const width = 120
+      // const height = Phaser.Math.Between(40, 120) // случайная высота
+      const height = 40
+
+      const platform = scene.add
+        .rectangle(0, 0, width, height, 0xffffff, 0.9)
+        // .setStrokeStyle(2, 0xffffff, 0.4)
         .setScale(1)
-        .setTint(color)
+        // .setTint(color)
         .setOrigin(0.5, 0)
 
-      let text = scene.add
+      const text = scene.add
         .text(0, 20, '', {
           fontSize: '24px',
           color: '#000',
@@ -41,11 +55,16 @@ export class Platforms {
         })
         .setOrigin(0.5, 0.5)
 
-      let unit = scene.add.container(
+      const img = scene.add.image(0, 40, 'fadeRect').setOrigin(0.5, 0)
+
+      // const y = Phaser.Math.Between(0, 200)
+      const y = i * this.stepping * Math.pow(1.02, i)
+      const unit = scene.add.container(
         i * this.spacing,
-        i * this.stepping * Math.pow(1.02, i),
-        [platform, text]
+        y, //
+        [platform, text, img]
       )
+      unit.defaultY = y
 
       this.platforms.add(unit)
     }
@@ -54,6 +73,7 @@ export class Platforms {
   updatePlatforms(crashTable) {
     // console.log('updatePlatforms')
     this.platforms.list.forEach((unit, i) => {
+      // this.setDefaultColor(unit) // сброс цвета
       let text = unit.list[1]
       if (crashTable[i]) {
         unit.setVisible(true)
@@ -65,6 +85,43 @@ export class Platforms {
         unit.setVisible(false)
       }
     })
+  }
+  createGradientTexture(key, color, width, height) {
+    const canvas = this.scene.textures.createCanvas(key, width, height)
+    const ctx = canvas.getContext()
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, height)
+    gradient.addColorStop(0, `rgba(${color}, 0.5)`)
+    gradient.addColorStop(1, `rgba(${color}, 0)`)
+
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, width, height)
+    canvas.refresh()
+  }
+
+  setRed(count) {
+    const platformContainer = this.platforms.list[count]
+    if (!platformContainer) return
+
+    const [platform, text, gradientImage] = platformContainer.list
+
+    platform.fillColor = 0xff0000
+
+    // Меняем градиент
+    gradientImage.setTexture('fadeRedRect')
+  }
+  setDefaultColor(count) {
+    // console.log('setDefaultColor', count)
+    const platformContainer = this.platforms.list[count]
+    if (!platformContainer) return
+    // console.log('setDefaultColor', platformContainer)
+
+    const [platform, text, gradientImage] = platformContainer.list
+
+    platform.fillColor = 0xffffff // белый цвет
+
+    // Меняем градиент
+    gradientImage.setTexture('fadeRect')
   }
 
   resetPosition(x, y) {
@@ -119,6 +176,9 @@ export class Platforms {
             units.forEach((unit) => {
               unit.alpha = 1
             })
+            // сброс цвета платформы
+            this.setDefaultColor(startIndex)
+
             if (onComplete) onComplete()
           },
         })

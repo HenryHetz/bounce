@@ -1,24 +1,30 @@
 export class Ball {
   constructor(scene, emitter) {
     this.scene = scene
-    this.x = 120
-    this.y = 250
+    this.x = this.scene.ballX
+    this.y = this.scene.ballY
+    this.diameter = 80
+    this.color = 0xff0000 // красный цвет
     this.distanceY = scene.distanceY
     this.gridUnit = scene.gridUnit
     this.duration = scene.duration
     this.emitter = emitter
 
+    // this.ball = scene.add
+    //   .image(this.x, this.y, 'ball')
+    //   .setOrigin(0.5, 1)
+    //   .setScale(0.8)
+    //   .setAlpha(0)
+
     this.ball = scene.add
-      .image(this.x, this.y, 'ball')
+      .ellipse(this.x, this.y, this.diameter, this.diameter, this.color)
       .setOrigin(0.5, 1)
-      .setScale(0.8)
-      .setAlpha(0)
 
     this.bounceTween = null
   }
 
   reset() {
-    this.ball.clearTint()
+    this.clearTint()
     this.ball.y = this.y
     this.scene.tweens.add({
       targets: this.ball,
@@ -79,11 +85,11 @@ export class Ball {
   }
 
   setTint(color) {
-    this.ball.setTint(color)
+    // this.ball.setTint(color)
   }
 
   clearTint() {
-    this.ball.clearTint()
+    // this.ball.clearTint()
   }
 
   getX() {

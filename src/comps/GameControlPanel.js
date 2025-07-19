@@ -23,7 +23,7 @@ export class GameControlPanel {
 
     // StakeCounter
     this.stakeCounter = this.scene.add
-      .text(this.centerX, 10 * this.gridUnit, '', {
+      .text(this.centerX, buttonY - 1.5 * this.gridUnit, '', {
         font: '40px walibi',
         fill: 'white',
         stroke: 'black',
