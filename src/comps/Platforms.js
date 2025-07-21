@@ -1,12 +1,12 @@
 export class Platforms {
-  constructor(scene) {
+  constructor(scene, crashTable) {
     this.scene = scene
 
     // Конфиг
     this.count = 100
     this.spacing = 140
     this.stepping = -5
-    this.hiddingCount = 6
+    this.hiddingCount = 5
     this.ballX = scene.ballX
     this.ballY = scene.ballY
     this.distanceY = scene.distanceY
@@ -19,8 +19,30 @@ export class Platforms {
     this.platforms = scene.add.container(this.startX, this.startY)
 
     this.createPlatforms()
-  }
+    this.updatePlatforms(crashTable)
 
+    this.createEvents()
+  }
+  createEvents() {
+    this.scene.events.on('gameEvent', (data) => {
+      this.handleEvent(data)
+    })
+  }
+  handleEvent(data) {
+    if (data.mode === 'COUNTDOWN') {
+    }
+    if (data.mode === 'ROUND_PREPARE') {
+      this.movePlatforms()
+    }
+    if (data.mode === 'BOUNCE') {
+      this.hidePlatform(data.count)
+      this.moveNextPlatforms(data.count + 1)
+    }
+    if (data.mode === 'FINISH') {
+      this.setRed(data.count)
+      this.hideAndResetPlatforms(data.count)
+    }
+  }
   createPlatforms() {
     const { scene } = this
     const colors = [0xffffff, 0xffff00]
@@ -51,7 +73,7 @@ export class Platforms {
         .text(0, 20, '', {
           fontSize: '24px',
           color: '#000',
-          fontFamily: 'Courier',
+          fontFamily: 'AvenirNextCondensedBold',
         })
         .setOrigin(0.5, 0.5)
 

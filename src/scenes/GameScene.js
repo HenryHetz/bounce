@@ -1,9 +1,11 @@
 import { DEFAULT_RISK_SETTING } from '../constants/riskConstants'
+import { DEFAULT_AUTOBET_SETTING } from '../constants/autobetConstants'
 import { Background } from '../comps/Background'
 import { RiskTunerPanel } from '../comps/RiskTuner/RiskTunerPanel'
 import { AutoPanel } from '../comps/Auto/AutoPanel'
 
 import { BetValues } from '../comps/Bet/BetValues'
+import { BotManager } from '../comps/BotManager'
 
 import { Ball } from '../comps/Ball'
 import { Platforms } from '../comps/Platforms'
@@ -22,7 +24,7 @@ export default class GameScene extends Phaser.Scene {
     this.sceneCenterX = this.cameras.main.centerX // центр сцены по X - через width найти
     this.ballX = 160
     this.ballY = 240
-    this.platformY = this.gridUnit * 8
+    this.platformY = this.gridUnit * 8.5
     this.distanceY = this.platformY - this.ballY
     // console.log('distance', this.distanceY)
     this.buttonY = 11.5 * this.gridUnit // где блок кнопок считать из высоты экрана
@@ -31,14 +33,15 @@ export default class GameScene extends Phaser.Scene {
     this.buttonIndent = 100
 
     this.duration = 500
+    this.roundCounter = 0 // счетчик раундов
+    this.bounceCount = 0 // отскоков
+    this.quickMode = true // быстрая игра
 
     this.betValues = BetValues // dev
     this.initialBet = 10 // начальная ставка
     this.currentBetValue = this.initialBet // текущая ставка
     this.pendingBetValue = null // для проверки ставки перед началом раунда
-    this.autoBetting = false // автоигра
-
-    this.bounceCount = 0 // отскоков
+    // this.autoBetting = false // автоигра
 
     this.initialDeposit = 10000 // начальная ставка
     this.currentDeposit = this.initialDeposit // начальная сумма
@@ -49,9 +52,10 @@ export default class GameScene extends Phaser.Scene {
     this.cashOutAllowed = false // разрешить клик по кнопке "вывести деньги"
     this.hasBet = false
     this.betAllowed = false
+    this.defaultAutobetSetting = DEFAULT_AUTOBET_SETTING
+    this.currentAutobetSetting = { ...DEFAULT_AUTOBET_SETTING }
 
-    this.roundCounter = 0 // счетчик раундов
-
+    // на сервере!!!
     this.houseEdge = 1
 
     this.defaultRiskSetting = DEFAULT_RISK_SETTING
@@ -72,11 +76,12 @@ export default class GameScene extends Phaser.Scene {
     this.createMoneyCounter()
 
     this.ball = new Ball(this, this.emitter)
-    this.platforms = new Platforms(this)
-    this.platforms.updatePlatforms(this.crashTable)
+    this.platforms = new Platforms(this, this.crashTable)
 
     this.riskTuner = new RiskTunerPanel(this, this.defaultRiskSetting)
     this.autoSetting = new AutoPanel(this, this.defaultRiskSetting)
+
+    this.botManager = new BotManager(this, this.betValues)
 
     this.gameControlPanel = new GameControlPanel(this, {
       onCash: () => this.handleButtonClick(),
@@ -101,12 +106,7 @@ export default class GameScene extends Phaser.Scene {
     // console.log('handleButtonClick', state)
     if (state === 'COUNTDOWN' && !this.hasBet) {
       // console.log('handleButtonClick bet')
-      this.moneyCounterUpdate(-this.currentBetValue)
-      this.hasBet = true
-      this.setBetAllowed(false)
-      this.events.emit('gameAction', {
-        mode: 'BET',
-      })
+      this.makeBet()
     }
 
     if (
@@ -122,7 +122,7 @@ export default class GameScene extends Phaser.Scene {
       this.sounds.heart.play()
       this.moneyCounterUpdate(this.stakeValue) // event
 
-      this.events.emit('gameAction', {
+      this.events.emit('gameEvent', {
         mode: 'CASHOUT',
         hasCashOut: this.hasCashOut,
         stakeValue: this.stakeValue,
@@ -130,6 +130,14 @@ export default class GameScene extends Phaser.Scene {
 
       this.stakeValue = 0
     }
+  }
+  makeBet() {
+    this.moneyCounterUpdate(-this.currentBetValue)
+    this.hasBet = true
+    this.setBetAllowed(false)
+    this.events.emit('gameEvent', {
+      mode: 'BET',
+    })
   }
   createEvents() {
     this.events.on('riskTuner:apply', (newRiskSetting) => {
@@ -143,7 +151,7 @@ export default class GameScene extends Phaser.Scene {
       if (this.betAllowed) {
         this.currentBetValue = value
         // console.log('[GameScene] betChanged', value)
-        this.events.emit('gameAction', {
+        this.events.emit('gameEvent', {
           mode: 'BET_CHANGED',
           betValue: this.currentBetValue,
         })
@@ -169,7 +177,7 @@ export default class GameScene extends Phaser.Scene {
       .text(this.sceneCenterX, this.gridUnit * 9, '', {
         fontSize: '24px',
         color: '#FDD41D',
-        fontFamily: 'Courier',
+        fontFamily: 'AvenirNextCondensedBold',
       })
       .setOrigin(0.5, 0)
       .setAlign('center')
@@ -188,8 +196,8 @@ export default class GameScene extends Phaser.Scene {
           )
         }
         let text
-        if (diffSettings()) text = 'NEW CUSTOM:'
-        else text = 'SET DEFAULT:'
+        if (diffSettings()) text = 'CUSTOM:'
+        else text = 'DEFAULT:'
 
         this.newRiskSettingNotice.text =
           // 'New settings in the next round...',
@@ -336,26 +344,27 @@ export default class GameScene extends Phaser.Scene {
       // console.log('FSM state:', state)
       switch (state) {
         case 'COUNTDOWN':
-          this.events.emit('gameState', {
+          this.events.emit('gameEvent', {
             mode: 'COUNTDOWN',
             betValue: this.currentBetValue,
           })
           this.countdown()
           break
         case 'ROUND':
-          this.events.emit('gameState', {
+          this.events.emit('gameEvent', {
             mode: 'ROUND',
             hasBet: this.hasBet,
           })
           this.round()
           break
         case 'FINISH':
-          this.events.emit('gameState', {
+          this.events.emit('gameEvent', {
             mode: 'FINISH',
             hasBet: this.hasBet,
             hasCashOut: this.hasCashOut,
             cashOutAllowed: this.cashOutAllowed,
             stakeValue: this.stakeValue,
+            count: this.bounceCount,
           })
           this.finish()
           break
@@ -368,20 +377,21 @@ export default class GameScene extends Phaser.Scene {
     if (this.pendingBetValue) {
       // можно проверить предварительную ставку
     }
-
-    this.hasBet = false
-    this.hasCashOut = false
     this.setBetAllowed(true)
+    this.hasCashOut = false
+    this.hasBet = false
 
     if (this.pendingRiskSetting) {
       this.handleNewSettings(this.pendingRiskSetting)
-      this.platforms.updatePlatforms(this.crashTable)
+      this.platforms.updatePlatforms(this.crashTable) // придумать как создать событие
     }
     this.stakeValue = 0 // здесь??
 
     let countDown = 8
-    let roundPrepareDelay = 3000 // подбор на 6 - 1500
-    let roundStartDelay = countDown - roundPrepareDelay / 1000
+    if (this.quickMode) countDown = 4
+
+    let roundPrepareDelay = countDown * 1000 - 4000 // подбор на 6 - 1500
+    let roundStartDelay = 4
     // countDown
     this.time.addEvent({
       delay: 1000,
@@ -415,7 +425,10 @@ export default class GameScene extends Phaser.Scene {
     })
   }
   roundPrepare(roundStartDelay) {
-    this.platforms.movePlatforms()
+    this.events.emit('gameEvent', {
+      mode: 'ROUND_PREPARE',
+    })
+
     this.ball.reset()
 
     this.time.addEvent({
@@ -429,6 +442,12 @@ export default class GameScene extends Phaser.Scene {
         // this.background.move()
         this.roundCounter++
         // this.moneyCounterUpdate(-this.currentBetValue)
+
+        // автоигра
+        if (this.currentAutobetSetting.rounds > 0 && !this.hasBet) {
+          this.currentAutobetSetting.rounds--
+          this.makeBet()
+        }
 
         this.fsm.toRound()
       },
@@ -451,19 +470,15 @@ export default class GameScene extends Phaser.Scene {
       const multiplier = this.crashTable[this.bounceCount].multiplier
       this.stakeValue = this.currentBetValue * multiplier
 
-      this.events.emit('gameAction', {
+      this.events.emit('gameEvent', {
         mode: 'BOUNCE',
         count: this.bounceCount,
         multiplier: multiplier,
         stakeValue: this.stakeValue,
         hasBet: this.hasBet,
       })
-      // this.stakeCounterUpdate(this.crashTable[this.bounceCount].multiplier)
 
-      // платформы ловят эвент сам
-      this.platforms.hidePlatform(this.bounceCount)
       this.bounceCount++
-      this.platforms.moveNextPlatforms(this.bounceCount)
       // на новый цикл
       this.ball.bounce(() => {
         this.bounceHandler()
@@ -477,13 +492,10 @@ export default class GameScene extends Phaser.Scene {
   }
   finish() {
     // console.log('this.cashOutAllowed', this.cashOutAllowed)
+    this.sounds.dropCoin.play()
 
     this.stopMoving(this.bounceCount)
-    this.sounds.dropCoin.play()
     this.setCashOutAllowed(false)
-
-    // dev
-    this.platforms.setRed(this.bounceCount)
 
     this.time.addEvent({
       delay: 2000,
@@ -497,7 +509,7 @@ export default class GameScene extends Phaser.Scene {
   setCashOutAllowed(state) {
     if (this.cashOutAllowed === state) return
     this.cashOutAllowed = state
-    this.events.emit('gameAction', {
+    this.events.emit('gameEvent', {
       mode: 'CASHOUT_ALLOWED',
       cashOutAllowed: state,
       hasBet: this.hasBet,
@@ -506,7 +518,7 @@ export default class GameScene extends Phaser.Scene {
   setBetAllowed(state) {
     if (this.betAllowed === state) return
     this.betAllowed = state
-    this.events.emit('gameAction', {
+    this.events.emit('gameEvent', {
       mode: 'BET_ALLOWED',
       betAllowed: state,
     })
@@ -531,9 +543,8 @@ export default class GameScene extends Phaser.Scene {
     }
   }
   stopMoving(bounceCount) {
-    // this.stopBall()
     this.ball.stop()
-    this.platforms.hideAndResetPlatforms(bounceCount)
+
     // this.stopBack()
     // this.background.stop()
   }
@@ -639,7 +650,7 @@ export default class GameScene extends Phaser.Scene {
   }
   initCrashIndex() {
     let random = Math.random()
-    // let random = 0.9999999999999 // dev
+    // random = 0.9999999999999 // dev
     let multiplier = null
     let index = 0
     let acc = 0

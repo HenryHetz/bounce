@@ -90,7 +90,7 @@ export default class GameScene extends Phaser.Scene {
       .text(this.sceneCenterX, this.gridUnit * 1.3, '', {
         fontSize: '24px',
         color: '#FDD41D',
-        fontFamily: 'Courier',
+        fontFamily: 'AvenirNextCondensedBold',
       })
       .setOrigin(0.5, 0)
       .setAlpha(0)

@@ -91,16 +91,16 @@ export class GameControlPanel {
       .setDepth(200)
   }
   createEvents() {
-    this.scene.events.on('gameState', (data) => {
+    this.scene.events.on('gameEvent', (data) => {
       this.handleGameState(data)
     })
-    this.scene.events.on('gameAction', (data) => {
+    this.scene.events.on('gameEvent', (data) => {
       this.handleGameAction(data)
     })
   }
 
   handleGameState(data) {
-    // console.log('gameState', data)
+    // console.log('gameEvent', data)
     if (data.mode === 'COUNTDOWN') {
       // buttonAction
       this.buttonAction.setTexture('button_red')
@@ -120,12 +120,12 @@ export class GameControlPanel {
       }
     }
     if (data.mode === 'FINISH') {
-      //   console.log('gameState FINISH', data)
+      //   console.log('gameEvent FINISH', data)
       if (!data.hasCashOut && data.hasBet) this.updateStakeText(0)
     }
   }
   handleGameAction(data) {
-    // console.log('gameAction', data)
+    // console.log('gameEvent', data)
     if (data.mode === 'CASHOUT') {
       this.buttonAction.setTexture('button_black')
       //   this.buttonActionLabel.setText('OUT')

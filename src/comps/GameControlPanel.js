@@ -94,10 +94,7 @@ export class GameControlPanel {
   }
 
   createEvents() {
-    this.scene.events.on('gameState', (data) => {
-      this.handleEvent(data.mode, data)
-    })
-    this.scene.events.on('gameAction', (data) => {
+    this.scene.events.on('gameEvent', (data) => {
       this.handleEvent(data.mode, data)
     })
   }
@@ -107,7 +104,7 @@ export class GameControlPanel {
     if (handler) {
       handler.call(this, data)
     } else {
-      console.warn(`[GameControlPanel] No handler for event: ${type}`)
+      //   console.warn(`[GameControlPanel] No handler for event: ${type}`)
     }
   }
 

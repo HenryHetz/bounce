@@ -31,7 +31,7 @@ export class RiskSlider {
     this.minText = scene.add
       .text(this.bar.x - this.length / 2 - 40, this.bar.y, minText, {
         // fontFamily: 'AvenirNextCondensedBold',
-        fontFamily: 'Courier',
+        fontFamily: 'AvenirNextCondensedBold',
         fontSize: '24px',
         color: 'yellow',
       })
@@ -39,7 +39,7 @@ export class RiskSlider {
     this.maxText = scene.add
       .text(this.bar.x + this.length / 2 + 40, this.bar.y, maxText, {
         // fontFamily: 'AvenirNextCondensedBold',
-        fontFamily: 'Courier',
+        fontFamily: 'AvenirNextCondensedBold',
         fontSize: '24px',
         color: 'yellow',
       })

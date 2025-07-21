@@ -64,7 +64,7 @@ export class AutoPanel {
       .text(scene.sceneCenterX - 200, scene.gridUnit * 3, '', {
         fontSize: '24px',
         color: '#FDD41D',
-        fontFamily: 'Courier',
+        fontFamily: 'AvenirNextCondensedBold',
       })
       .setOrigin(0, 0.5)
 
