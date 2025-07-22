@@ -1,5 +1,5 @@
 export class Ball {
-  constructor(scene, emitter) {
+  constructor(scene, emitter, bounceHandler) {
     this.scene = scene
     this.x = this.scene.ballX
     this.y = this.scene.ballY
@@ -9,6 +9,7 @@ export class Ball {
     this.gridUnit = scene.gridUnit
     this.duration = scene.duration
     this.emitter = emitter
+    this.bounceHandler = bounceHandler
 
     // this.ball = scene.add
     //   .image(this.x, this.y, 'ball')
@@ -19,10 +20,33 @@ export class Ball {
     this.ball = scene.add
       .ellipse(this.x, this.y, this.diameter, this.diameter, this.color)
       .setOrigin(0.5, 1)
+      .setAlpha(0)
 
     this.bounceTween = null
-  }
 
+    this.createEvents()
+  }
+  createEvents() {
+    this.scene.events.on('gameEvent', (data) => {
+      this.handleEvent(data)
+    })
+  }
+  handleEvent(data) {
+    if (data.mode === 'COUNTDOWN') {
+    }
+    if (data.mode === 'ROUND_PREPARE') {
+      this.reset()
+    }
+    if (data.mode === 'ROUND') {
+      this.fall(this.bounceHandler)
+    }
+    if (data.mode === 'BOUNCE') {
+      this.bounce(this.bounceHandler)
+    }
+    if (data.mode === 'FINISH') {
+      this.stop()
+    }
+  }
   reset() {
     this.clearTint()
     this.ball.y = this.y

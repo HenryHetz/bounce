@@ -75,6 +75,7 @@ export default class PreloadScene extends Phaser.Scene {
     // dev
     this.load.image('dev_ui', 'assets/sprites/dev/drops_ui_5.png')
     this.load.image('grid', 'assets/sprites/dev/grid.png')
+    this.load.image('bot_chat', 'assets/sprites/dev/bot_chat.png')
     // bg
     this.load.image('main_bg', 'assets/sprites/bg/bg_8.png')
     this.load.image('tuner_bg', 'assets/sprites/bg/tuner_bg.png')

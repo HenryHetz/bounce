@@ -33,7 +33,7 @@ export class RiskSlider {
         // fontFamily: 'AvenirNextCondensedBold',
         fontFamily: 'AvenirNextCondensedBold',
         fontSize: '24px',
-        color: 'yellow',
+        color: '#FDD41D',
       })
       .setOrigin(1, 0.5)
     this.maxText = scene.add
@@ -41,7 +41,7 @@ export class RiskSlider {
         // fontFamily: 'AvenirNextCondensedBold',
         fontFamily: 'AvenirNextCondensedBold',
         fontSize: '24px',
-        color: 'yellow',
+        color: '#FDD41D',
       })
       .setOrigin(0, 0.5)
 

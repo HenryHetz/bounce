@@ -19,7 +19,7 @@ export class Platforms {
     this.platforms = scene.add.container(this.startX, this.startY)
 
     this.createPlatforms()
-    this.updatePlatforms(crashTable)
+    // this.updatePlatforms(crashTable)
 
     this.createEvents()
   }
@@ -42,13 +42,16 @@ export class Platforms {
       this.setRed(data.count)
       this.hideAndResetPlatforms(data.count)
     }
+    if (data.mode === 'RISK_SETTING_CHANGED') {
+      this.updatePlatforms(data.crashTable)
+    }
   }
   createPlatforms() {
     const { scene } = this
     const colors = [0xffffff, 0xffff00]
 
-    this.createGradientTexture('fadeRect', '255,255,255', 120, 160)
-    this.createGradientTexture('fadeRedRect', '255,0,0', 120, 160)
+    this.scene.createGradientTexture('fadeWhiteRect', '255,255,255', 120, 160)
+    this.scene.createGradientTexture('fadeRedRect', '255,0,0', 120, 160)
 
     for (let i = 0; i < this.count; i++) {
       const color = colors[i % 2]
@@ -77,14 +80,14 @@ export class Platforms {
         })
         .setOrigin(0.5, 0.5)
 
-      const img = scene.add.image(0, 40, 'fadeRect').setOrigin(0.5, 0)
+      const tail = scene.add.image(0, height, 'fadeWhiteRect').setOrigin(0.5, 0)
 
       // const y = Phaser.Math.Between(0, 200)
       const y = i * this.stepping * Math.pow(1.02, i)
       const unit = scene.add.container(
         i * this.spacing,
         y, //
-        [platform, text, img]
+        [platform, text, tail]
       )
       unit.defaultY = y
 
@@ -93,7 +96,7 @@ export class Platforms {
   }
 
   updatePlatforms(crashTable) {
-    // console.log('updatePlatforms')
+    // console.log('updatePlatforms', crashTable)
     this.platforms.list.forEach((unit, i) => {
       // this.setDefaultColor(unit) // сброс цвета
       let text = unit.list[1]
@@ -107,18 +110,6 @@ export class Platforms {
         unit.setVisible(false)
       }
     })
-  }
-  createGradientTexture(key, color, width, height) {
-    const canvas = this.scene.textures.createCanvas(key, width, height)
-    const ctx = canvas.getContext()
-
-    const gradient = ctx.createLinearGradient(0, 0, 0, height)
-    gradient.addColorStop(0, `rgba(${color}, 0.5)`)
-    gradient.addColorStop(1, `rgba(${color}, 0)`)
-
-    ctx.fillStyle = gradient
-    ctx.fillRect(0, 0, width, height)
-    canvas.refresh()
   }
 
   setRed(count) {
@@ -143,7 +134,7 @@ export class Platforms {
     platform.fillColor = 0xffffff // белый цвет
 
     // Меняем градиент
-    gradientImage.setTexture('fadeRect')
+    gradientImage.setTexture('fadeWhiteRect')
   }
 
   resetPosition(x, y) {

@@ -1,5 +1,5 @@
 export const DEFAULT_AUTOBET_SETTING = {
-  rounds: 2,
-  payout: 2,
+  rounds: 0,
+  payout: 0,
   // steps: 100,
 }
