@@ -73,37 +73,28 @@ export default class PreloadScene extends Phaser.Scene {
   }
   preloadAssets() {
     // dev
-    this.load.image('dev_ui', 'assets/sprites/dev/drops_ui_5.png')
+    // this.load.image('dev_ui', 'assets/sprites/dev/drops_ui_5.png')
     this.load.image('grid', 'assets/sprites/dev/grid.png')
-    this.load.image('bot_chat', 'assets/sprites/dev/bot_chat.png')
+    this.load.image('co', 'assets/sprites/dev/co_2.png')
+    this.load.image('bot_chat', 'assets/sprites/dev/bot_chart_4.jpg')
     // bg
-    this.load.image('main_bg', 'assets/sprites/bg/bg_8.png')
+    this.load.image('main_bg', 'assets/sprites/bg/main_bg.jpg')
     this.load.image('tuner_bg', 'assets/sprites/bg/tuner_bg.png')
-    this.load.image('auto_bg', 'assets/sprites/bg/auto_bg_2.png')
+    this.load.image('auto_bg', 'assets/sprites/bg/auto_bg.jpg')
     // elements
-    this.load.image('ball', 'assets/sprites/elements/ball_2.png')
-    this.load.image('platform', 'assets/sprites/elements/platform_2.png')
-    this.load.image('button_cash', 'assets/sprites/elements/button_cash.png')
-    this.load.image('button_out', 'assets/sprites/elements/button_out.png')
-    this.load.image('button_bet', 'assets/sprites/elements/button_bet.png')
+    // this.load.image('ball', 'assets/sprites/elements/ball_2.png')
+    // this.load.image('platform', 'assets/sprites/elements/platform_2.png')
+
     this.load.image('button_red', 'assets/sprites/elements/button_red.png')
     this.load.image('button_black', 'assets/sprites/elements/button_black.png')
     this.load.image(
       'button_yellow',
       'assets/sprites/elements/button_yellow.png'
     )
-    this.load.image(
-      'button_rules',
-      'assets/sprites/elements/button_rules_3.png'
-    )
-    this.load.image('button_stake', 'assets/sprites/elements/button_stake.png')
+    this.load.image('button_rules', 'assets/sprites/elements/button_rules.png')
     this.load.image('button_auto', 'assets/sprites/elements/button_auto.png')
     this.load.image('button_tuner', 'assets/sprites/elements/button_tuner.png')
-    this.load.image('button_x', 'assets/sprites/elements/button_x.png')
-    this.load.image(
-      'button_close',
-      'assets/sprites/elements/button_close_2.png'
-    )
+    this.load.image('button_close', 'assets/sprites/elements/button_close.png')
     this.load.image('button_reset', 'assets/sprites/elements/button_reset.png')
     this.load.image(
       'slider_button',
@@ -121,97 +112,18 @@ export default class PreloadScene extends Phaser.Scene {
       'button_bet_plus',
       'assets/sprites/elements/button_bet_plus.png'
     )
-    this.load.image('header', 'assets/sprites/elements/header_2.png')
-    // this.load.image('road_to_hell', 'assets/sprites/elements/road_to_hell.png')
-    this.load.image('risk_tuner', 'assets/sprites/elements/risk_tuner.png')
+    this.load.image('header', 'assets/sprites/elements/header.png')
     this.load.image('skull', 'assets/sprites/elements/skull_.png')
+    this.load.image('ghost', 'assets/sprites/elements/ghost.png')
     this.load.image('volume_bar', 'assets/sprites/elements/volume_bar.png')
 
     // sounds
-    this.load.audio('dropCoin', 'assets/sounds/dropCoin.mp3')
-    this.load.audio('heart', 'assets/sounds/heart.mp3')
-    // this.load.audio('fone1', 'assets/sounds/fone1.mp3')
+    this.load.audio('crash', 'assets/sounds/crash.mp3')
+    this.load.audio('cashout', 'assets/sounds/cashout.mp3')
+    this.load.audio('coin', 'assets/sounds/coin.mp3')
 
     // particles
     this.load.image('yellow', 'assets/sprites/particles/yellow.png')
-    // this.load.atlas(
-    //   'particles',
-    //   'assets/sprites/particles/particles.png',
-    //   'assets/sprites/particles/particles.json'
-    // )
-
-    // this.load.atlas(
-    //   'particles_2',
-    //   'assets/sprites/particles_2.png',
-    //   'assets/sprites/particles_2.json'
-    // )
-    // this.load.atlas(
-    //   'flash_fx_circle',
-    //   'assets/sprites/vfx/flash_fx_circle-0.png',
-    //   'assets/sprites/vfx/flash_fx_circle-0.json'
-    // )
-    // this.load.atlas(
-    //   'flash_fx_line',
-    //   'assets/sprites/vfx/flash_fx_line.png',
-    //   'assets/sprites/vfx/flash_fx_line.json'
-    // )
-    // this.load.atlas(
-    //   'flash_fx_figure',
-    //   'assets/sprites/vfx/flash_fx_figure.png',
-    //   'assets/sprites/vfx/flash_fx_figure.json'
-    // )
-    // this.load.atlas(
-    //   'flash_fx_attack',
-    //   'assets/sprites/vfx/flash_fx_attack.png',
-    //   'assets/sprites/vfx/flash_fx_attack.json'
-    // )
-
-    // this.load.atlas(
-    //   'vfx_electricity',
-    //   'assets/sprites/vfx/vfx_electricity.png',
-    //   'assets/sprites/vfx/vfx_electricity.json'
-    // )
-    // this.load.atlas(
-    //   'vfx_explosion',
-    //   'assets/sprites/vfx/vfx_explosion.png',
-    //   'assets/sprites/vfx/vfx_explosion.json'
-    // )
-    // this.load.atlas(
-    //   'vfx_smoke',
-    //   'assets/sprites/vfx/vfx_smoke.png',
-    //   'assets/sprites/vfx/vfx_smoke.json'
-    // )
-    // this.load.atlas(
-    //   'vfx_fire',
-    //   'assets/sprites/vfx/vfx_fire.png',
-    //   'assets/sprites/vfx/vfx_fire.json'
-    // )
-    // this.load.atlas(
-    //   'vfx_orb_2',
-    //   'assets/sprites/vfx/vfx_orb_2.png',
-    //   'assets/sprites/vfx/vfx_orb_2.json'
-    // )
-
-    // this.load.atlas(
-    //   'portal_10_blue',
-    //   'assets/sprites/vfx/portal_10_blue.png',
-    //   'assets/sprites/vfx/portal_10_blue.json'
-    // )
-    // this.load.atlas(
-    //   'portal_9_blue',
-    //   'assets/sprites/vfx/portal_9_blue.png',
-    //   'assets/sprites/vfx/portal_9_blue.json'
-    // )
-    // this.load.atlas(
-    //   'portal_3_blue',
-    //   'assets/sprites/vfx/portal_3_blue.png',
-    //   'assets/sprites/vfx/portal_3_blue.json'
-    // )
-
-    // this.load.once('complete', () => {
-    //   // this.createFramesArrays();
-    //   this.startGame()
-    // })
   }
 
   startGame() {

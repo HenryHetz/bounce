@@ -1,10 +1,10 @@
 import {
-  generateMinPayoutArray,
-  generateMaxPayoutArray,
-  generateStepsArray,
+  generatePayoutFractionArray,
+  generatePayoutNumbersArray,
+  generateRoundsArray,
 } from './Data'
 import { Slider } from './Slider'
-import { Chart } from './Chart'
+// import { Chart } from './Chart'
 import {
   normalize,
   getDiscreteValue,
@@ -18,16 +18,15 @@ export class AutoPanel {
 
     // --- Генерируем массивы дискретных значений
     this.settingArrays = {
-      minPayout: generateMinPayoutArray(),
-      maxPayout: generateMaxPayoutArray(),
-      steps: generateStepsArray(),
+      rounds: generateRoundsArray(),
+      payout: generatePayoutNumbersArray(),
     }
 
     // --- Основные состояния
-    this.defaultRiskSetting = { ...setting }
-    this.currentRiskSetting = { ...setting }
-    this.draftRiskSetting = { ...setting }
-    this.previousDraftValues = { ...setting }
+    this.defaultSetting = { ...setting }
+    this.currentSetting = { ...setting }
+    this.draftSetting = { ...setting }
+    this.previousValues = { ...setting }
 
     // --- Контейнер для всего UI
     this.container = scene.add.container(0, 0).setDepth(20).setVisible(false)
@@ -47,10 +46,6 @@ export class AutoPanel {
       .setInteractive()
 
     // --- Заголовок
-    // this.naming = scene.add
-    //   .image(scene.sceneCenterX, scene.gridUnit * 1.8, 'risk_tuner')
-    //   .setOrigin(0.5)
-
     this.naming = scene.add
       .text(scene.sceneCenterX - 200, scene.gridUnit * 1.8, '#AUTO_BETTING', {
         fontSize: '38px',
@@ -62,50 +57,51 @@ export class AutoPanel {
     // --- Нотация
     this.notation = scene.add
       .text(scene.sceneCenterX - 200, scene.gridUnit * 3, '', {
-        fontSize: '24px',
+        fontSize: '30px',
         color: '#FDD41D',
         fontFamily: 'AvenirNextCondensedBold',
       })
       .setOrigin(0, 0.5)
 
     this.notation.update = (setting) => {
+      // console.log('Auto notation.update', setting)
+
       const lines = [
-        `Steps_${setting.steps}`,
-        `Min_X_${setting.minPayout}`,
-        `Max_X_${setting.maxPayout}`,
-        `EDGE_${scene.houseEdge}%`, // ${scene.houseEdge}
+        `Rounds_${setting.rounds}`,
+        `Payout_${Number(setting.payout).toFixed(2)}`,
+        // `Max_X_${setting.rounds}`,
       ]
       this.notation.setText(lines)
     }
 
     // --- Чарт
-    this.chart = new Chart(scene, 120, 7 * scene.gridUnit)
+    // this.chart = new Chart(scene, 120, 7 * scene.gridUnit)
 
     // --- Слайдеры
     this.slider1 = new Slider(
       scene,
       320,
       9 * scene.gridUnit,
-      'MIN PAYOUT',
-      this.settingArrays.minPayout[0],
-      this.settingArrays.minPayout[this.settingArrays.minPayout.length - 1]
+      'PAYOUT',
+      this.settingArrays.payout[0],
+      this.settingArrays.payout[this.settingArrays.payout.length - 1]
     )
     this.slider2 = new Slider(
       scene,
       320,
       10 * scene.gridUnit,
-      'MAX PAYOUT',
-      this.settingArrays.maxPayout[0],
-      this.settingArrays.maxPayout[this.settingArrays.maxPayout.length - 1]
+      'ROUNDS',
+      this.settingArrays.rounds[0],
+      this.settingArrays.rounds[this.settingArrays.rounds.length - 1]
     )
-    this.slider3 = new Slider(
-      scene,
-      320,
-      8 * scene.gridUnit,
-      'STEPS',
-      this.settingArrays.steps[0],
-      this.settingArrays.steps[this.settingArrays.steps.length - 1]
-    )
+    // this.slider3 = new Slider(
+    //   scene,
+    //   320,
+    //   8 * scene.gridUnit,
+    //   'STEPS',
+    //   this.settingArrays.rounds[0],
+    //   this.settingArrays.rounds[this.settingArrays.rounds.length - 1]
+    // )
 
     // --- Кнопки
     this.buttonClose = scene.add
@@ -159,7 +155,7 @@ export class AutoPanel {
       this.bg,
       this.naming,
       this.notation,
-      this.chart.graphics,
+      // this.chart.graphics,
       this.buttonClose,
       this.textClose,
       this.buttonReset,
@@ -167,7 +163,7 @@ export class AutoPanel {
       this.buttonCreate,
       this.slider1.container,
       this.slider2.container,
-      this.slider3.container,
+      // this.slider3.container,
     ])
   }
 
@@ -178,19 +174,19 @@ export class AutoPanel {
     scene.input.setDraggable([
       this.slider1.button,
       this.slider2.button,
-      this.slider3.button,
+      // this.slider3.button,
     ])
 
     // --- Карта слайдеров
     this.sliderSettingsMap = new Map([
-      [this.slider1, this.settingArrays.minPayout],
-      [this.slider2, this.settingArrays.maxPayout],
-      [this.slider3, this.settingArrays.steps],
+      [this.slider1, this.settingArrays.payout],
+      [this.slider2, this.settingArrays.rounds],
+      // [this.slider3, this.settingArrays.rounds],
     ])
 
     // --- Слушатель drag
     scene.input.on('drag', (pointer, gameObject) => {
-      const slider = [this.slider1, this.slider2, this.slider3].find(
+      const slider = [this.slider1, this.slider2].find(
         (s) => s.button === gameObject
       )
       if (!slider) return
@@ -203,21 +199,21 @@ export class AutoPanel {
       const discreteValue = getDiscreteValue(settingArray, sliderValue)
 
       let key
-      if (slider === this.slider1) key = 'minPayout'
-      else if (slider === this.slider2) key = 'maxPayout'
-      else if (slider === this.slider3) key = 'steps'
+      if (slider === this.slider1) key = 'payout'
+      else if (slider === this.slider2) key = 'rounds'
+      // else if (slider === this.slider3) key = 'rounds'
       if (!key) return
 
       // === Проверка на изменение ===
-      if (this.previousDraftValues[key] === discreteValue) return
+      if (this.previousValues[key] === discreteValue) return
 
       // === Обновляем draft и previous ===
-      this.draftRiskSetting[key] = discreteValue
-      this.previousDraftValues[key] = discreteValue
+      this.draftSetting[key] = discreteValue
+      this.previousValues[key] = discreteValue
 
       // === Обновляем UI ===
-      this.notation.update(this.draftRiskSetting)
-      this.updateChart(this.draftRiskSetting)
+      this.notation.update(this.draftSetting)
+      // this.updateChart(this.draftSetting)
       this.updateCreateButton()
     })
 
@@ -231,25 +227,21 @@ export class AutoPanel {
     })
 
     this.buttonCreate.on('pointerdown', () => {
-      // if (this.isDraftChanged()) {
-      //   this.applyDraft()
-      // }
+      if (this.isDraftChanged()) {
+        this.applyDraft()
+      }
     })
   }
 
   updateChart(setting) {
-    const targetBars = this.makeChartBarsFromSettings(setting)
-    this.chart.animateTo(targetBars)
+    // const targetBars = this.makeChartBarsFromSettings(setting)
+    // this.chart.animateTo(targetBars)
   }
 
   isDraftChanged() {
-    const d = this.draftRiskSetting
-    const c = this.currentRiskSetting
-    return (
-      d.minPayout !== c.minPayout ||
-      d.maxPayout !== c.maxPayout ||
-      d.steps !== c.steps
-    )
+    const d = this.draftSetting
+    const c = this.currentSetting
+    return d.payout !== c.payout || d.rounds !== c.rounds
   }
 
   updateCreateButton() {
@@ -257,18 +249,18 @@ export class AutoPanel {
   }
 
   applyDraft() {
-    this.currentRiskSetting = { ...this.draftRiskSetting }
-    this.scene.events.emit('riskTuner:apply', this.currentRiskSetting)
+    this.currentSetting = { ...this.draftSetting }
+    this.scene.events.emit('autoBetting:apply', this.currentSetting)
     this.show(false)
   }
 
   resetDraft() {
-    this.draftRiskSetting = { ...this.defaultRiskSetting }
-    this.previousDraftValues = { ...this.defaultRiskSetting }
+    this.draftSetting = { ...this.defaultSetting }
+    this.previousValues = { ...this.defaultSetting }
 
-    this.setSliders(this.draftRiskSetting)
-    this.notation.update(this.draftRiskSetting)
-    this.updateChart(this.draftRiskSetting)
+    this.setSliders(this.draftSetting)
+    this.notation.update(this.draftSetting)
+    // this.updateChart(this.draftSetting)
     this.updateCreateButton()
   }
 
@@ -280,39 +272,42 @@ export class AutoPanel {
 
   setSliders(setting) {
     const minNorm = this.getNormalizedFromArray(
-      this.settingArrays.minPayout,
-      setting.minPayout
+      this.settingArrays.payout,
+      setting.payout
     )
     const maxNorm = this.getNormalizedFromArray(
-      this.settingArrays.maxPayout,
-      setting.maxPayout
+      this.settingArrays.rounds,
+      setting.rounds
     )
-    const stepsNorm = this.getNormalizedFromArray(
-      this.settingArrays.steps,
-      setting.steps
-    )
+    // const stepsNorm = this.getNormalizedFromArray(
+    //   this.settingArrays.rounds,
+    //   setting.rounds
+    // )
 
     setSliderValue(this.slider1, minNorm)
     setSliderValue(this.slider2, maxNorm)
-    setSliderValue(this.slider3, stepsNorm)
+    // setSliderValue(this.slider3, stepsNorm)
   }
 
-  show(state) {
+  show(state, setting) {
     this.container.setVisible(state)
     if (state) {
-      this.draftRiskSetting = { ...this.currentRiskSetting }
-      this.previousDraftValues = { ...this.currentRiskSetting }
+      if (setting) {
+        // console.log('Auto show', setting)
+        this.draftSetting = { ...setting }
+        this.previousValues = { ...setting }
+      }
 
-      this.setSliders(this.draftRiskSetting)
-      this.notation.update(this.draftRiskSetting)
-      this.updateChart(this.draftRiskSetting)
+      this.setSliders(this.draftSetting)
+      this.notation.update(this.draftSetting)
+      // this.updateChart(this.draftSetting)
       this.updateCreateButton()
     }
   }
 
   makeChartBarsFromSettings(setting) {
-    const minIndex = this.settingArrays.minPayout.indexOf(setting.minPayout)
-    const maxIndex = this.settingArrays.maxPayout.indexOf(setting.maxPayout)
+    const minIndex = this.settingArrays.payout.indexOf(setting.payout)
+    const maxIndex = this.settingArrays.rounds.indexOf(setting.rounds)
 
     const chartHeight = this.chart.chartHeight
     const minStart = 0.05 * chartHeight
@@ -320,13 +315,13 @@ export class AutoPanel {
     const maxStart = 0.3 * chartHeight
     const maxFinish = 1 * chartHeight
 
-    const normMin = minIndex / (this.settingArrays.minPayout.length - 1)
-    const normMax = maxIndex / (this.settingArrays.maxPayout.length - 1)
+    const normMin = minIndex / (this.settingArrays.payout.length - 1)
+    const normMax = maxIndex / (this.settingArrays.rounds.length - 1)
 
     const firstBarHeight = minStart + normMin * (minFinish - minStart)
     const lastBarHeight = maxStart + normMax * (maxFinish - maxStart)
 
-    const curveFactor = 1.3 + 20 / setting.steps
+    const curveFactor = 1.3 + 20 / setting.rounds
 
     const bars = []
     for (let i = 0; i < this.chart.barsCount; i++) {

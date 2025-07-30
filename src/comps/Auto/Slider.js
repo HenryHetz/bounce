@@ -11,9 +11,8 @@ export class Slider {
 
     this.container = scene.add.container(x, y)
 
-    this.bar = scene.add
-      .image(0, 0, this.imageBar)
-      .setRotation(Phaser.Math.DegToRad(90))
+    this.bar = scene.add.image(0, 0, this.imageBar)
+    // .setRotation(Phaser.Math.DegToRad(90))
 
     this.button = scene.add.image(0, 0, this.imageButton).setInteractive()
 

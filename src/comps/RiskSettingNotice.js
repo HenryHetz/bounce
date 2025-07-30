@@ -2,7 +2,7 @@ export class RiskSettingNotice {
   constructor(scene) {
     this.scene = scene
     this.x = this.scene.sceneCenterX
-    this.y = 9 * this.scene.gridUnit
+    this.y = 9 * this.scene.gridUnit + 20
 
     this.label = scene.add
       .text(this.x, this.y, '', {

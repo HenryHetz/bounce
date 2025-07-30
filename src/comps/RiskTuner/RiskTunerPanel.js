@@ -23,6 +23,12 @@ export class RiskTunerPanel {
       steps: generateStepsArray(),
     }
 
+    // let customs = 1
+    // for (let key of Object.keys(this.settingArrays)) {
+    //   console.log(key, this.settingArrays[key].length)
+    //   customs *= this.settingArrays[key].length
+    // }
+    // console.log('Вариантов кастома:', customs)
     // --- Основные состояния
     this.defaultRiskSetting = { ...riskSetting }
     this.currentRiskSetting = { ...riskSetting }
@@ -61,8 +67,8 @@ export class RiskTunerPanel {
 
     // --- Нотация
     this.notation = scene.add
-      .text(scene.sceneCenterX - 200, scene.gridUnit * 3, '', {
-        fontSize: '24px',
+      .text(scene.sceneCenterX - 200, scene.gridUnit * 3.2, '', {
+        fontSize: '30px',
         color: '#FDD41D',
         fontFamily: 'AvenirNextCondensedBold',
       })

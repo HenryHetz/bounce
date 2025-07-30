@@ -6,6 +6,7 @@ import { Background } from '../comps/Background'
 import { RiskTunerPanel } from '../comps/RiskTuner/RiskTunerPanel'
 import { AutoPanel } from '../comps/Auto/AutoPanel'
 
+import { CashoutChart } from '../comps/CashoutChart.js'
 import { BetValues } from '../comps/Bet/BetValues'
 import { BotManager } from '../comps/BotManager'
 import { RiskSettingNotice } from '../comps/RiskSettingNotice'
@@ -19,60 +20,14 @@ import { GameControlPanel } from '../comps/GameControlPanel'
 import { on } from 'ws'
 
 import { DevUI } from '../comps/DevUI'
+import { LiveOpsManager } from '../liveOps/LiveOpsManager'
+import { GhostGroup } from '../comps/GhostGroup.js'
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super('Game')
   }
   preload() {}
-  init_() {
-    this.isCrashed = false // проигрыш
-    this.gridUnit = 80
-    this.sceneCenterX = this.cameras.main.centerX // центр сцены по X - через width найти
-    this.ballX = 160
-    this.ballY = 240
-    this.platformY = this.gridUnit * 8.5
-    this.distanceY = this.platformY - this.ballY
-    // console.log('distance', this.distanceY)
-    this.buttonY = 11.5 * this.gridUnit // где блок кнопок считать из высоты экрана
-    // или прибить к низу
-    this.buttonNameSpacing = 60
-    this.buttonIndent = 100
-
-    this.duration = 500
-    this.roundCounter = 0 // счетчик раундов
-    this.bounceCount = 0 // отскоков
-    this.quickMode = true // быстрая игра
-
-    this.betValues = BetValues // dev
-    this.initialBet = 10 // начальная ставка
-    this.currentBetValue = this.initialBet // текущая ставка
-    this.pendingBetValue = null // для проверки ставки перед началом раунда
-    // this.autoBetting = false // автоигра
-
-    this.initialDeposit = 10000 // начальная ставка
-    this.currentDeposit = this.initialDeposit // начальная сумма
-
-    this.stakeValue = 0
-
-    this.hasCashOut = false
-    this.cashOutAllowed = false // разрешить клик по кнопке "вывести деньги"
-    this.hasBet = false
-    this.betAllowed = false
-    this.defaultAutobetSetting = DEFAULT_AUTOBET_SETTING
-    this.currentAutobetSetting = { ...DEFAULT_AUTOBET_SETTING }
-
-    // на сервере!!!
-    this.houseEdge = 1
-    this.defaultRiskSetting = DEFAULT_RISK_SETTING
-    this.currentRiskSetting = { ...DEFAULT_RISK_SETTING }
-
-    // на сервере!!!
-    // this.crashTable = this.generateCrashTable(this.defaultRiskSetting)
-
-    // dev
-    this.tweens.timeScale = 1
-  }
   init() {
     // GAME STATE
     this.isCrashed = false
@@ -89,7 +44,8 @@ export default class GameScene extends Phaser.Scene {
     this.distanceY = this.platformY - this.ballY
     this.buttonY = 11.5 * this.gridUnit
     this.buttonNameSpacing = 60
-    this.buttonIndent = 100
+    this.buttonIndent = 120
+    this.labelColor = '#13469A'
     this.duration = 500
 
     // STAKES & BALANCE
@@ -109,18 +65,47 @@ export default class GameScene extends Phaser.Scene {
 
     // AUTOBET & RISK SETTINGS
     this.houseEdge = 1
-    this.defaultAutobetSetting = DEFAULT_AUTOBET_SETTING
-    this.currentAutobetSetting = { ...DEFAULT_AUTOBET_SETTING }
+    this.defaultAutoSetting = DEFAULT_AUTOBET_SETTING
+    this.currentAutoSetting = { ...DEFAULT_AUTOBET_SETTING }
     this.defaultRiskSetting = DEFAULT_RISK_SETTING
     this.currentRiskSetting = { ...DEFAULT_RISK_SETTING }
 
     // TWEENS (DEV)
     this.tweens.timeScale = 1
+    this.rnd = Phaser.Math.RND
   }
   create() {
     this.background = new Background(this)
     // dev
     this.devUI = new DevUI(this)
+    this.cashoutChart = new CashoutChart(this)
+    // this.liveOps = new LiveOpsManager(this) // нужно изучить
+    // this.clouds = new GhostGroup(this)
+
+    // dev
+    let y = this.rnd.between(300, 700)
+    let x = this.rnd.between(100, 540)
+    let alpha = this.rnd.between(0.05, 0.2)
+
+    this.ghost = this.add
+      .rope(x, y, 'ghost', null, 64, true)
+      .setRotation(-1.6)
+      .setScale(0.3)
+      .setAlpha(alpha)
+    this.ropeCount = 0
+
+    this.tweens.add({
+      targets: this.ghost,
+      alpha: 0.4,
+      duration: 5000,
+      yoyo: true,
+      repeat: 4,
+      onComplete: () => {
+        // this.ghost.x = 200
+        // this.ghost.y = 600
+        // this.ghost.alpha = 0
+      },
+    })
 
     this.header = this.add
       .image(0, 0, 'header')
@@ -140,24 +125,26 @@ export default class GameScene extends Phaser.Scene {
     this.riskTuner = new RiskTunerPanel(this, this.defaultRiskSetting)
     this.riskSettingNotice = new RiskSettingNotice(this)
 
-    this.autoSetting = new AutoPanel(this, this.defaultRiskSetting)
+    this.autoSetting = new AutoPanel(this, this.defaultAutoSetting)
 
     // this.botManager = new BotManager(this, this.betValues)
 
     this.gameControlPanel = new GameControlPanel(this, {
       onCash: () => this.handleButtonClick(),
       onTuner: () => this.riskTuner.show(true),
-      onAuto: () => this.autoSetting.show(true),
+      onAuto: () => this.autoSetting.show(true, this.currentAutoSetting),
     })
 
     if (!this.sounds) this.createSounds()
 
     this.createEvents()
 
-    this.handleNewSettings(this.currentRiskSetting)
+    this.handleRiskSettings(this.currentRiskSetting)
 
     this.fsm = new FSM()
     this.setupFSMHandlers()
+
+    // start loop
     this.fsm.toCountdown()
   }
   handleButtonClick() {
@@ -179,7 +166,7 @@ export default class GameScene extends Phaser.Scene {
       this.setCashOutAllowed(false)
 
       this.hasCashOut = true
-      this.sounds.heart.play()
+      this.sounds.cashout.play()
       // если выход после 0, то нужно что-то менять...
       if (this.stakeValue <= 0) {
         this.stakeValue = this.currentBetValue //
@@ -220,7 +207,14 @@ export default class GameScene extends Phaser.Scene {
         // betValue: this.currentBetValue,
       })
     })
-
+    this.events.on('autoBetting:apply', (newSetting) => {
+      console.log('[GameScene] autoBetting:apply', newSetting)
+      this.pendingAutoSetting = { ...newSetting }
+      this.events.emit('gameEvent', {
+        mode: 'AUTO_SETTING_PENDING',
+        // betValue: this.currentBetValue,
+      })
+    })
     this.events.on('betChanged', (value) => {
       // console.log('[GameScene] betChanged', value, this.betAllowed)
       if (this.betAllowed) {
@@ -233,16 +227,6 @@ export default class GameScene extends Phaser.Scene {
       }
     })
   }
-  createDevUI() {
-    this.add.image(0, 0, 'dev_ui').setOrigin(0).setAlpha(0).setScale(1)
-    this.add.image(640, 80, 'bot_chat').setOrigin(1, 0).setAlpha(1).setScale(1)
-    this.grid = this.add
-      .image(0, 0, 'grid')
-      .setOrigin(0)
-      .setAlpha(0)
-      .setDepth(100)
-  }
-
   createSounds() {
     this.sounds = {
       // fone: this.sound.add('fone1', {
@@ -250,10 +234,13 @@ export default class GameScene extends Phaser.Scene {
       //   loop: true,
       //   delay: 5000,
       // }),
-      heart: this.sound.add('heart', {
+      cashout: this.sound.add('cashout', {
         volume: 0.2,
       }),
-      dropCoin: this.sound.add('dropCoin', {
+      crash: this.sound.add('crash', {
+        volume: 0.2,
+      }),
+      coin: this.sound.add('coin', {
         volume: 0.2,
       }),
     }
@@ -284,7 +271,25 @@ export default class GameScene extends Phaser.Scene {
     ctx.fillRect(0, 0, width, height)
     canvas.refresh()
   }
-  update(time, delta) {}
+  update(time, delta) {
+    this.ropeCount += 0.01 // скорость изгибов? - fix
+    const curve = 0.1 // fix
+    const amplitude = 20 // 10 - 20
+    const up = 1 // 0.5 - 1
+    const points = this.ghost.points
+    // console.log('points1', points[0], points[points.length - 1])
+    for (let i = 0; i < points.length; i++) {
+      points[i].y = Math.sin(i * curve + this.ropeCount) * amplitude
+      points[i].x += up
+      if (points[i].x >= 2000) {
+        console.log('points1', points[i].x)
+        points[i].x -= 2000
+        console.log('points2', points[i].x)
+      }
+    }
+    // console.log('points2', points)
+    this.ghost.setDirty()
+  }
 
   // FSM setup
   setupFSMHandlers() {
@@ -328,9 +333,10 @@ export default class GameScene extends Phaser.Scene {
     this.hasBet = false
     this.stakeValue = 0
 
-    if (this.pendingRiskSetting) this.handleNewSettings(this.pendingRiskSetting)
+    if (this.pendingRiskSetting)
+      this.handleRiskSettings(this.pendingRiskSetting)
 
-    let countDown = 8
+    let countDown = 6
     if (this.quickMode) countDown = 4
 
     let roundPrepareDelay = countDown * 1000 - 4000
@@ -388,9 +394,13 @@ export default class GameScene extends Phaser.Scene {
         this.bounceCount = 0
         this.roundCounter++
 
+        if (this.pendingAutoSetting)
+          this.handleAutoSetting(this.pendingAutoSetting)
+
         // автоигра
-        if (this.currentAutobetSetting.rounds > 0 && !this.hasBet) {
-          this.currentAutobetSetting.rounds--
+        if (this.currentAutoSetting.rounds > 0 && !this.hasBet) {
+          this.currentAutoSetting.rounds-- // слишком просто?
+          console.log('currentAutoSetting', this.currentAutoSetting.rounds)
           this.makeBet()
         }
 
@@ -424,11 +434,12 @@ export default class GameScene extends Phaser.Scene {
         this.setCashOutAllowed(true)
 
       this.bounceCount++
+      // this.sounds.coin.play()
     }
   }
   finish() {
     // console.log('this.cashOutAllowed', this.cashOutAllowed)
-    this.sounds.dropCoin.play()
+    this.sounds.crash.play()
     this.setCashOutAllowed(false)
 
     this.time.addEvent({
@@ -459,7 +470,17 @@ export default class GameScene extends Phaser.Scene {
       betAllowed: state,
     })
   }
-  handleNewSettings(settings) {
+  handleAutoSetting(settings) {
+    this.currentAutoSetting = { ...settings }
+    this.pendingAutoSetting = null
+
+    this.events.emit('gameEvent', {
+      mode: 'AUTO_SETTING_CHANGED',
+      default: this.defaultAutoSetting,
+      current: this.currentAutoSetting,
+    })
+  }
+  handleRiskSettings(settings) {
     this.currentRiskSetting = { ...settings }
     this.crashTable = this.generateCrashTable(this.currentRiskSetting)
     this.pendingRiskSetting = null
@@ -502,7 +523,7 @@ export default class GameScene extends Phaser.Scene {
     for (let i = 0; i < crashSetting.steps; i++) {
       let multiplier, base
       if (i === 0) {
-        multiplier = 0
+        multiplier = 1
         base = 0
       } else {
         multiplier = crashSetting.minPayout * Math.pow(ratio, i - 1)

@@ -18,8 +18,9 @@ export class GameControlPanel {
 
   createElements() {
     const buttonY = 11.5 * this.gridUnit
-    const indent = 100
-    const nameSpacing = 60
+    const indent = this.scene.buttonIndent
+    const nameSpacing = this.scene.buttonNameSpacing
+    const labelColor = this.scene.labelColor
 
     // StakeCounter
     this.stakeCounter = this.scene.add
@@ -66,7 +67,7 @@ export class GameControlPanel {
       .text(indent, buttonY - nameSpacing, 'AUTO', {
         fontFamily: 'AvenirNextCondensedBold',
         fontSize: '18px',
-        color: '#13469A',
+        color: labelColor,
       })
       .setOrigin(0.5, 0)
 
@@ -82,7 +83,7 @@ export class GameControlPanel {
       .text(this.buttonTuner.x, this.buttonTuner.y - nameSpacing, 'TUNER', {
         fontFamily: 'AvenirNextCondensedBold',
         fontSize: '18px',
-        color: '#13469A',
+        color: labelColor,
       })
       .setOrigin(0.5, 0)
 
@@ -183,6 +184,7 @@ export class GameControlPanel {
   onBounce(data) {
     if (data.count > 0 && data.hasBet) {
       this.updateStakeText(data.stakeValue)
+      // this.scene.sounds.coin.play()
     }
   }
 
