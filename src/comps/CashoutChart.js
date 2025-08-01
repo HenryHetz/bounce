@@ -29,15 +29,16 @@ export class CashoutChart {
         align: 'left',
       })
       .setOrigin(0, 0)
+      .setAlpha(0)
 
     let random = Phaser.Math.FloatBetween(200, 1000).toFixed(0)
     this.liveLabel = this.scene.add
-      .text(535, this.y + 300, 'LIVE: ' + random, {
+      .text(this.x + 10, this.y - 50, 'LIVE: ' + random, {
         font: '18px walibi',
-        color: 'red',
+        color: 'black',
         align: 'center',
       })
-      .setOrigin(0.5)
+      .setOrigin(0, 0)
   }
   simulateServer() {
     const spawn = () => {

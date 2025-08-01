@@ -7,7 +7,7 @@ export class RiskChart {
     this.chartY = chartY
     this.barWidth = 50
     this.barGap = 10
-    this.chartHeight = 440
+    this.chartHeight = 400
     this.barsCount = 7
 
     this.graphics = scene.add.graphics()

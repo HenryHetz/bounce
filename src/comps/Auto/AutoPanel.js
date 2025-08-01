@@ -12,6 +12,8 @@ import {
   setSliderValue,
 } from './Utils'
 
+import { ButtonGraphics } from '../ButtonGraphics'
+
 export class AutoPanel {
   constructor(scene, setting) {
     this.scene = scene
@@ -47,12 +49,12 @@ export class AutoPanel {
 
     // --- Заголовок
     this.naming = scene.add
-      .text(scene.sceneCenterX - 200, scene.gridUnit * 1.8, '#AUTO_BETTING', {
+      .text(scene.sceneCenterX, scene.gridUnit * 1.8, '#AUTO_BETTING', {
         fontSize: '38px',
         color: '#FDD41D',
         fontFamily: 'walibi',
       })
-      .setOrigin(0, 0.5)
+      .setOrigin(0.5)
 
     // --- Нотация
     this.notation = scene.add
@@ -66,13 +68,24 @@ export class AutoPanel {
     this.notation.update = (setting) => {
       // console.log('Auto notation.update', setting)
 
-      const lines = [
-        `Rounds_${setting.rounds}`,
-        `Payout_${Number(setting.payout).toFixed(2)}`,
-        // `Max_X_${setting.rounds}`,
-      ]
-      this.notation.setText(lines)
+      // const lines = [
+      //   `Rounds_${setting.rounds}`,
+      //   `Payout_${Number(setting.payout).toFixed(2)}`,
+      //   // `Max_X_${setting.rounds}`,
+      // ]
+      // this.notation.setText(lines)
+      this.displayRounds.setText(setting.rounds)
     }
+
+    // this.squareRounds = scene.add.
+
+    this.displayRounds = scene.add
+      .text(scene.sceneCenterX - 120, scene.gridUnit * 6, '100', {
+        fontSize: '60px',
+        color: '#FDD41D',
+        fontFamily: 'walibi',
+      })
+      .setOrigin(0.5)
 
     // --- Чарт
     // this.chart = new Chart(scene, 120, 7 * scene.gridUnit)
@@ -82,7 +95,7 @@ export class AutoPanel {
       scene,
       320,
       9 * scene.gridUnit,
-      'PAYOUT',
+      'CASHOUT / NUMBERS',
       this.settingArrays.payout[0],
       this.settingArrays.payout[this.settingArrays.payout.length - 1]
     )
@@ -94,14 +107,14 @@ export class AutoPanel {
       this.settingArrays.rounds[0],
       this.settingArrays.rounds[this.settingArrays.rounds.length - 1]
     )
-    // this.slider3 = new Slider(
-    //   scene,
-    //   320,
-    //   8 * scene.gridUnit,
-    //   'STEPS',
-    //   this.settingArrays.rounds[0],
-    //   this.settingArrays.rounds[this.settingArrays.rounds.length - 1]
-    // )
+    this.slider3 = new Slider(
+      scene,
+      320,
+      8 * scene.gridUnit,
+      'CASHOUT / FRACTALS',
+      this.settingArrays.rounds[0],
+      this.settingArrays.rounds[this.settingArrays.rounds.length - 1]
+    )
 
     // --- Кнопки
     this.buttonClose = scene.add
@@ -118,11 +131,28 @@ export class AutoPanel {
     // .setFlipX(true)
     // .setScale(1)
 
-    this.buttonCreate = scene.add
-      .image(scene.sceneCenterX, scene.buttonY, 'button_create')
+    // this.buttonAction = scene.add
+    //   .image(scene.sceneCenterX, scene.buttonY, 'button_create')
+    //   .setOrigin(0.5)
+    //   .setInteractive()
+    //   .setAlpha(0.6)
+
+    this.buttonAction = new ButtonGraphics(
+      this.scene,
+      scene.sceneCenterX,
+      scene.buttonY,
+      'yellow'
+    ).setAlpha(0.6)
+
+    this.buttonAction.enableHitbox()
+
+    this.buttonActionLabel = this.scene.add
+      .text(this.buttonAction.x, this.buttonAction.y, 'SET', {
+        font: '40px walibi',
+        fill: 'black',
+      })
       .setOrigin(0.5)
-      .setInteractive()
-      .setAlpha(0.6)
+      .setAlign('center')
 
     this.textClose = scene.add
       .text(
@@ -156,14 +186,16 @@ export class AutoPanel {
       this.naming,
       this.notation,
       // this.chart.graphics,
+      this.displayRounds,
       this.buttonClose,
       this.textClose,
       this.buttonReset,
       this.textReset,
-      this.buttonCreate,
+      this.buttonAction,
+      this.buttonActionLabel,
       this.slider1.container,
       this.slider2.container,
-      // this.slider3.container,
+      this.slider3.container,
     ])
   }
 
@@ -174,14 +206,14 @@ export class AutoPanel {
     scene.input.setDraggable([
       this.slider1.button,
       this.slider2.button,
-      // this.slider3.button,
+      this.slider3.button,
     ])
 
     // --- Карта слайдеров
     this.sliderSettingsMap = new Map([
       [this.slider1, this.settingArrays.payout],
       [this.slider2, this.settingArrays.rounds],
-      // [this.slider3, this.settingArrays.rounds],
+      [this.slider3, this.settingArrays.rounds],
     ])
 
     // --- Слушатель drag
@@ -201,7 +233,7 @@ export class AutoPanel {
       let key
       if (slider === this.slider1) key = 'payout'
       else if (slider === this.slider2) key = 'rounds'
-      // else if (slider === this.slider3) key = 'rounds'
+      else if (slider === this.slider3) key = 'rounds'
       if (!key) return
 
       // === Проверка на изменение ===
@@ -226,7 +258,7 @@ export class AutoPanel {
       this.resetDraft()
     })
 
-    this.buttonCreate.on('pointerdown', () => {
+    this.buttonAction.on('pointerdown', () => {
       if (this.isDraftChanged()) {
         this.applyDraft()
       }
@@ -245,7 +277,7 @@ export class AutoPanel {
   }
 
   updateCreateButton() {
-    this.buttonCreate.setAlpha(this.isDraftChanged() ? 1 : 0.7)
+    this.buttonAction.setAlpha(this.isDraftChanged() ? 1 : 0.7)
   }
 
   applyDraft() {
@@ -279,14 +311,14 @@ export class AutoPanel {
       this.settingArrays.rounds,
       setting.rounds
     )
-    // const stepsNorm = this.getNormalizedFromArray(
-    //   this.settingArrays.rounds,
-    //   setting.rounds
-    // )
+    const stepsNorm = this.getNormalizedFromArray(
+      this.settingArrays.rounds,
+      setting.rounds
+    )
 
     setSliderValue(this.slider1, minNorm)
     setSliderValue(this.slider2, maxNorm)
-    // setSliderValue(this.slider3, stepsNorm)
+    setSliderValue(this.slider3, stepsNorm)
   }
 
   show(state, setting) {

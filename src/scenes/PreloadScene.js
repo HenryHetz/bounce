@@ -73,6 +73,7 @@ export default class PreloadScene extends Phaser.Scene {
   }
   preloadAssets() {
     // dev
+    this.load.image('button_hell', 'assets/sprites/elements/button_hell.png')
     // this.load.image('dev_ui', 'assets/sprites/dev/drops_ui_5.png')
     this.load.image('grid', 'assets/sprites/dev/grid.png')
     this.load.image('co', 'assets/sprites/dev/co_2.png')
@@ -85,12 +86,13 @@ export default class PreloadScene extends Phaser.Scene {
     // this.load.image('ball', 'assets/sprites/elements/ball_2.png')
     // this.load.image('platform', 'assets/sprites/elements/platform_2.png')
 
-    this.load.image('button_red', 'assets/sprites/elements/button_red.png')
-    this.load.image('button_black', 'assets/sprites/elements/button_black.png')
-    this.load.image(
-      'button_yellow',
-      'assets/sprites/elements/button_yellow.png'
-    )
+    // this.load.image('button_red', 'assets/sprites/elements/button_red.png')
+    // this.load.image('button_black', 'assets/sprites/elements/button_black.png')
+    // this.load.image(
+    //   'button_yellow',
+    //   'assets/sprites/elements/button_yellow.png'
+    // )
+
     this.load.image('button_rules', 'assets/sprites/elements/button_rules.png')
     this.load.image('button_auto', 'assets/sprites/elements/button_auto.png')
     this.load.image('button_tuner', 'assets/sprites/elements/button_tuner.png')

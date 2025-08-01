@@ -4,13 +4,16 @@ export class Background {
   constructor(scene) {
     this.scene = scene
     this.duration = scene.duration
-    this.startX = 0
-    this.startY = -50
+    // this.startX = 0
+    // this.startY = -50
+    this.startX = 420
+    this.startY = 40
     this.scale = 1.15
 
     this.bg = scene.add
       .image(this.startX, this.startY, 'main_bg')
-      .setOrigin(0)
+      // .setOrigin(0)
+      .setOrigin(0.6, 0.1)
       .setAlpha(0.8)
       .setScale(this.scale)
 
@@ -58,8 +61,8 @@ export class Background {
     // vertical move
     this.moveTween = this.scene.tweens.add({
       targets: this.bg,
-      y: 80,
-      // scale: 2,
+      y: 100,
+      scale: 2,
       duration: this.duration * 2 * 100,
     })
   }

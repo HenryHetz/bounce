@@ -1,5 +1,6 @@
 // GameControlPanel.js
 import { BetStepper } from './Bet/BetStepper'
+import { ButtonGraphics } from './ButtonGraphics'
 
 export class GameControlPanel {
   constructor(scene, config) {
@@ -41,11 +42,29 @@ export class GameControlPanel {
     )
 
     // Cash Button
-    this.buttonAction = this.scene.add
-      .image(this.centerX, buttonY, 'button_red')
-      .setOrigin(0.5)
-      .setInteractive()
-      .on('pointerdown', () => this.onCash?.())
+    // this.buttonAction_old = this.scene.add
+    //   .image(this.centerX, buttonY, 'button_red')
+    //   .setOrigin(0.5)
+    // .setAlpha(0.5)
+    //   .setInteractive()
+    //   .on('pointerdown', () => this.onCash?.())
+    // this.buttonBlack = new ButtonGraphics(
+    //   this.scene,
+    //   this.centerX + 4,
+    //   buttonY + 6,
+    //   'black'
+    // )
+
+    this.buttonAction = new ButtonGraphics(
+      this.scene,
+      this.centerX,
+      buttonY,
+      0xff0000
+    )
+    // .setInteractive()
+    // .setAlpha(0.5)
+    this.buttonAction.enableHitbox()
+    this.buttonAction.on('pointerdown', () => this.onCash?.())
 
     this.buttonActionLabel = this.scene.add
       .text(this.buttonAction.x, this.buttonAction.y, 'BET', {
@@ -88,10 +107,10 @@ export class GameControlPanel {
       .setOrigin(0.5, 0)
 
     // Rules Button
-    this.buttonRules = this.scene.add
-      .image(this.centerX, 13 * this.gridUnit, 'button_rules')
-      .setOrigin(0.5)
-      .setDepth(200)
+    // this.buttonRules = this.scene.add
+    //   .image(this.centerX, 13 * this.gridUnit, 'button_rules')
+    //   .setOrigin(0.5)
+    //   .setDepth(200)
   }
 
   createEvents() {
@@ -131,7 +150,8 @@ export class GameControlPanel {
   onCountdown(data) {
     // this.buttonAction.setTexture('button_red')
     // this.buttonAction.setAlpha(1)
-    this.updateActionButton('button_red')
+    // this.updateActionButton('button_red')
+    this.updateActionButton('red')
     this.updateActionLabel('BET', 'black')
 
     this.stakeCounter.clearTint()
@@ -154,7 +174,8 @@ export class GameControlPanel {
   onCashout() {
     // this.buttonAction.setTexture('button_black')
     this.updateActionLabel('OUT', '#ff0000')
-    this.updateActionButton('button_black')
+    // this.updateActionButton('button_black')
+    this.updateActionButton('black')
 
     this.stakeCounter.setTint(0xff0000)
   }
@@ -163,7 +184,8 @@ export class GameControlPanel {
     if (data.cashOutAllowed && data.hasBet) {
       //   this.buttonAction.setTexture('button_red')
       //   this.buttonAction.setAlpha(1)
-      this.updateActionButton('button_red')
+      // this.updateActionButton('button_red')
+      this.updateActionButton('red')
 
       this.updateActionLabel('CASH')
     }
@@ -201,8 +223,9 @@ export class GameControlPanel {
     }
   }
 
-  updateActionButton(texture, alpha = 1) {
-    this.buttonAction.setTexture(texture)
+  updateActionButton(color, alpha = 1) {
+    // this.buttonAction.setTexture(texture)
+    this.buttonAction.setColor(color)
     this.buttonAction.setAlpha(alpha)
   }
 

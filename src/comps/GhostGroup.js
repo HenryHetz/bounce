@@ -1,5 +1,5 @@
 'use strict'
-import Ghost from './Ghost'
+// import Ghost from './Ghost'
 
 export class GhostGroup extends Phaser.GameObjects.Group {
   constructor(scene) {

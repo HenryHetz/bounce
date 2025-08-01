@@ -21,7 +21,8 @@ import { on } from 'ws'
 
 import { DevUI } from '../comps/DevUI'
 import { LiveOpsManager } from '../liveOps/LiveOpsManager'
-import { GhostGroup } from '../comps/GhostGroup.js'
+// import { GhostGroup } from '../comps/GhostGroup.js'
+import { Ghost } from '../comps/Ghost'
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
@@ -44,7 +45,7 @@ export default class GameScene extends Phaser.Scene {
     this.distanceY = this.platformY - this.ballY
     this.buttonY = 11.5 * this.gridUnit
     this.buttonNameSpacing = 60
-    this.buttonIndent = 120
+    this.buttonIndent = 100
     this.labelColor = '#13469A'
     this.duration = 500
 
@@ -80,32 +81,7 @@ export default class GameScene extends Phaser.Scene {
     this.devUI = new DevUI(this)
     this.cashoutChart = new CashoutChart(this)
     // this.liveOps = new LiveOpsManager(this) // нужно изучить
-    // this.clouds = new GhostGroup(this)
-
-    // dev
-    let y = this.rnd.between(300, 700)
-    let x = this.rnd.between(100, 540)
-    let alpha = this.rnd.between(0.05, 0.2)
-
-    this.ghost = this.add
-      .rope(x, y, 'ghost', null, 64, true)
-      .setRotation(-1.6)
-      .setScale(0.3)
-      .setAlpha(alpha)
-    this.ropeCount = 0
-
-    this.tweens.add({
-      targets: this.ghost,
-      alpha: 0.4,
-      duration: 5000,
-      yoyo: true,
-      repeat: 4,
-      onComplete: () => {
-        // this.ghost.x = 200
-        // this.ghost.y = 600
-        // this.ghost.alpha = 0
-      },
-    })
+    // this.ghost = new Ghost(this)
 
     this.header = this.add
       .image(0, 0, 'header')
@@ -148,7 +124,7 @@ export default class GameScene extends Phaser.Scene {
     this.fsm.toCountdown()
   }
   handleButtonClick() {
-    // console.log('handleButtonClick', this.cashOutAllowed)
+    // console.log('handleButtonClick')
     const state = this.fsm.getState()
     // console.log('handleButtonClick', state)
     if (state === 'COUNTDOWN' && !this.hasBet) {
@@ -271,25 +247,7 @@ export default class GameScene extends Phaser.Scene {
     ctx.fillRect(0, 0, width, height)
     canvas.refresh()
   }
-  update(time, delta) {
-    this.ropeCount += 0.01 // скорость изгибов? - fix
-    const curve = 0.1 // fix
-    const amplitude = 20 // 10 - 20
-    const up = 1 // 0.5 - 1
-    const points = this.ghost.points
-    // console.log('points1', points[0], points[points.length - 1])
-    for (let i = 0; i < points.length; i++) {
-      points[i].y = Math.sin(i * curve + this.ropeCount) * amplitude
-      points[i].x += up
-      if (points[i].x >= 2000) {
-        console.log('points1', points[i].x)
-        points[i].x -= 2000
-        console.log('points2', points[i].x)
-      }
-    }
-    // console.log('points2', points)
-    this.ghost.setDirty()
-  }
+  update(time, delta) {}
 
   // FSM setup
   setupFSMHandlers() {
