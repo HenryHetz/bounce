@@ -1,5 +1,5 @@
 export class Platforms {
-  constructor(scene, crashTable) {
+  constructor(scene) {
     this.scene = scene
 
     // Конфиг

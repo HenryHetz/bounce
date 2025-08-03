@@ -1,10 +1,10 @@
 import {
-  generatePayoutFractionArray,
-  generatePayoutNumbersArray,
+  generateCashoutFractionArray,
+  generateCashoutNumbersArray,
   generateRoundsArray,
 } from './Data'
 import { Slider } from './Slider'
-// import { Chart } from './Chart'
+import { Chart } from './Chart'
 import {
   normalize,
   getDiscreteValue,
@@ -21,7 +21,8 @@ export class AutoPanel {
     // --- Генерируем массивы дискретных значений
     this.settingArrays = {
       rounds: generateRoundsArray(),
-      payout: generatePayoutNumbersArray(),
+      cashout: generateCashoutNumbersArray(), // целая часть: 0..99
+      fractions: generateCashoutFractionArray(), // дробная часть: 0.00..0.99
     }
 
     // --- Основные состояния
@@ -40,7 +41,7 @@ export class AutoPanel {
   createUI() {
     const { scene, container } = this
 
-    // --- Фон (теперь интерактивный, вместо старого vail)
+    // --- Фон
     this.bg = scene.add
       .image(0, 80, 'auto_bg')
       .setOrigin(0)
@@ -49,56 +50,104 @@ export class AutoPanel {
 
     // --- Заголовок
     this.naming = scene.add
-      .text(scene.sceneCenterX, scene.gridUnit * 1.8, '#AUTO_BETTING', {
+      .text(scene.sceneCenterX, scene.gridUnit * 2, '#AUTO_BETTING', {
         fontSize: '38px',
         color: '#FDD41D',
         fontFamily: 'walibi',
       })
       .setOrigin(0.5)
 
-    // --- Нотация
+    // --- Нотация/лейблы
     this.notation = scene.add
-      .text(scene.sceneCenterX - 200, scene.gridUnit * 3, '', {
-        fontSize: '30px',
-        color: '#FDD41D',
-        fontFamily: 'AvenirNextCondensedBold',
-      })
-      .setOrigin(0, 0.5)
+      .text(
+        scene.sceneCenterX,
+        scene.gridUnit * 2.5,
+        'Selecting "0" means no action.',
+        {
+          fontSize: '24px',
+          color: '#13469A', // жёлтый '#FDD41D'
+          fontFamily: 'AvenirNextCondensedBold',
+        }
+      )
+      .setOrigin(0.5)
+      .setAlign('center')
 
-    this.notation.update = (setting) => {
-      // console.log('Auto notation.update', setting)
-
-      // const lines = [
-      //   `Rounds_${setting.rounds}`,
-      //   `Payout_${Number(setting.payout).toFixed(2)}`,
-      //   // `Max_X_${setting.rounds}`,
-      // ]
-      // this.notation.setText(lines)
+    this.displaysUpdate = (setting) => {
       this.displayRounds.setText(setting.rounds)
+      this.displayCashout.setText(Number(setting.cashout).toFixed(2))
+
+      // dev
+      const roundsN = clamp(setting.rounds / 100, 0, 1)
+      const cashoutN = Phaser.Math.Clamp(Number(setting.cashout) / 100, 0, 1) // 👈 ЛИНЕЙНАЯ
+
+      this.chart?.animateTo([roundsN, cashoutN])
     }
 
-    // this.squareRounds = scene.add.
-
+    const clamp = (v, a, b) => Math.min(b, Math.max(a, v))
+    const logNorm = (v, min, max) => {
+      const vv = clamp(v, min, max)
+      return (
+        (Math.log10(vv) - Math.log10(min)) / (Math.log10(max) - Math.log10(min))
+      )
+    }
+    const displayY = scene.gridUnit * 5.5
+    const displayGap = 80
+    // Крупные цифры
     this.displayRounds = scene.add
-      .text(scene.sceneCenterX - 120, scene.gridUnit * 6, '100', {
+      .text(scene.sceneCenterX, displayY + displayGap, '', {
         fontSize: '60px',
-        color: '#FDD41D',
+        color: 'white',
         fontFamily: 'walibi',
       })
       .setOrigin(0.5)
+    // .setDepth(20)
+    this.displayRoundsLabel = scene.add
+      .text(this.displayRounds.x, this.displayRounds.y - 50, 'ROUNDS', {
+        fontFamily: 'AvenirNextCondensedBold',
+        fontSize: '24px',
+        color: '#13469A',
+      })
+      .setOrigin(0.5)
 
+    this.displayCashout = scene.add
+      .text(scene.sceneCenterX, displayY - displayGap, '', {
+        fontSize: '60px',
+        color: 'white',
+        fontFamily: 'walibi',
+      })
+      .setOrigin(0.5)
+    // .setDepth(20)
+
+    this.displayCashoutLabel = scene.add
+      .text(this.displayCashout.x, this.displayCashout.y - 50, 'CASHOUT', {
+        fontFamily: 'AvenirNextCondensedBold',
+        fontSize: '24px',
+        color: '#13469A',
+      })
+      .setOrigin(0.5)
     // --- Чарт
-    // this.chart = new Chart(scene, 120, 7 * scene.gridUnit)
+    const chartHeight = 240
+    const barWidth = 160
+
+    // this.chart = new Chart(scene, 0, this.displayRounds.y + chartHeight / 2)
+    // // два широких столбика строго под цифрами:
+    // this.chart.configure({
+    //   barsCount: 2,
+    //   barWidth,
+    //   chartHeight,
+    //   anchors: [this.displayRounds.x, this.displayCashout.x], // центры столбиков
+    // })
 
     // --- Слайдеры
     this.slider1 = new Slider(
       scene,
       320,
       9 * scene.gridUnit,
-      'CASHOUT / NUMBERS',
-      this.settingArrays.payout[0],
-      this.settingArrays.payout[this.settingArrays.payout.length - 1]
+      'CASHOUT • WHOLE',
+      this.settingArrays.cashout[0], // 0
+      this.settingArrays.cashout[this.settingArrays.cashout.length - 1] // 99
     )
+
     this.slider2 = new Slider(
       scene,
       320,
@@ -107,13 +156,14 @@ export class AutoPanel {
       this.settingArrays.rounds[0],
       this.settingArrays.rounds[this.settingArrays.rounds.length - 1]
     )
+
     this.slider3 = new Slider(
       scene,
       320,
       8 * scene.gridUnit,
-      'CASHOUT / FRACTALS',
-      this.settingArrays.rounds[0],
-      this.settingArrays.rounds[this.settingArrays.rounds.length - 1]
+      'CASHOUT • FRACTION',
+      this.settingArrays.fractions[0], // 0.00
+      this.settingArrays.fractions[this.settingArrays.fractions.length - 1] // 0.99
     )
 
     // --- Кнопки
@@ -128,14 +178,6 @@ export class AutoPanel {
       .setOrigin(0.5)
       .setScale(0.8)
       .setInteractive()
-    // .setFlipX(true)
-    // .setScale(1)
-
-    // this.buttonAction = scene.add
-    //   .image(scene.sceneCenterX, scene.buttonY, 'button_create')
-    //   .setOrigin(0.5)
-    //   .setInteractive()
-    //   .setAlpha(0.6)
 
     this.buttonAction = new ButtonGraphics(
       this.scene,
@@ -187,6 +229,9 @@ export class AutoPanel {
       this.notation,
       // this.chart.graphics,
       this.displayRounds,
+      this.displayRoundsLabel,
+      this.displayCashout,
+      this.displayCashoutLabel,
       this.buttonClose,
       this.textClose,
       this.buttonReset,
@@ -202,6 +247,13 @@ export class AutoPanel {
   createEvents() {
     const { scene } = this
 
+    scene.events.on('gameEvent', (data) => {
+      if (data.mode === 'AUTO_SETTING_CHANGED') {
+        // this.handleEvent(data)
+        this.currentSetting = { ...data.current }
+      }
+    })
+
     // --- Слайдеры активируем
     scene.input.setDraggable([
       this.slider1.button,
@@ -211,14 +263,14 @@ export class AutoPanel {
 
     // --- Карта слайдеров
     this.sliderSettingsMap = new Map([
-      [this.slider1, this.settingArrays.payout],
-      [this.slider2, this.settingArrays.rounds],
-      [this.slider3, this.settingArrays.rounds],
+      [this.slider1, this.settingArrays.cashout], // целая часть
+      [this.slider2, this.settingArrays.rounds], // раунды
+      [this.slider3, this.settingArrays.fractions], // дробная часть
     ])
 
     // --- Слушатель drag
     scene.input.on('drag', (pointer, gameObject) => {
-      const slider = [this.slider1, this.slider2].find(
+      const slider = [this.slider1, this.slider2, this.slider3].find(
         (s) => s.button === gameObject
       )
       if (!slider) return
@@ -230,21 +282,29 @@ export class AutoPanel {
       const settingArray = this.sliderSettingsMap.get(slider)
       const discreteValue = getDiscreteValue(settingArray, sliderValue)
 
-      let key
-      if (slider === this.slider1) key = 'payout'
-      else if (slider === this.slider2) key = 'rounds'
-      else if (slider === this.slider3) key = 'rounds'
-      if (!key) return
+      // Обновляем либо раунды, либо целую/дробную часть кэшаута
+      if (slider === this.slider2) {
+        if (this.previousValues.rounds === discreteValue) return
+        this.draftSetting.rounds = discreteValue
+        this.previousValues.rounds = discreteValue
+      } else {
+        const current = Number(this.draftSetting.cashout) || 0
+        const currentWhole = Math.trunc(current)
+        const currentFrac = +(current - currentWhole).toFixed(2)
 
-      // === Проверка на изменение ===
-      if (this.previousValues[key] === discreteValue) return
+        const whole = slider === this.slider1 ? discreteValue : currentWhole
+        const fraction = slider === this.slider3 ? discreteValue : currentFrac
 
-      // === Обновляем draft и previous ===
-      this.draftSetting[key] = discreteValue
-      this.previousValues[key] = discreteValue
+        // Собираем с аккуратной фиксацией двух знаков
+        const composed = +(whole + fraction).toFixed(2)
 
-      // === Обновляем UI ===
-      this.notation.update(this.draftSetting)
+        if (this.previousValues.cashout === composed) return
+        this.draftSetting.cashout = composed
+        this.previousValues.cashout = composed
+      }
+
+      // --- Обновляем UI
+      this.displaysUpdate(this.draftSetting)
       // this.updateChart(this.draftSetting)
       this.updateCreateButton()
     })
@@ -273,7 +333,7 @@ export class AutoPanel {
   isDraftChanged() {
     const d = this.draftSetting
     const c = this.currentSetting
-    return d.payout !== c.payout || d.rounds !== c.rounds
+    return d.cashout !== c.cashout || d.rounds !== c.rounds
   }
 
   updateCreateButton() {
@@ -291,7 +351,7 @@ export class AutoPanel {
     this.previousValues = { ...this.defaultSetting }
 
     this.setSliders(this.draftSetting)
-    this.notation.update(this.draftSetting)
+    this.displaysUpdate(this.draftSetting)
     // this.updateChart(this.draftSetting)
     this.updateCreateButton()
   }
@@ -303,66 +363,61 @@ export class AutoPanel {
   }
 
   setSliders(setting) {
-    const minNorm = this.getNormalizedFromArray(
-      this.settingArrays.payout,
-      setting.payout
+    // Разложим cashout на целую и дробную части
+    const whole = Math.trunc(Number(setting.cashout) || 0)
+    const frac = +((Number(setting.cashout) || 0) - whole).toFixed(2)
+
+    const normWhole = this.getNormalizedFromArray(
+      this.settingArrays.cashout,
+      whole
     )
-    const maxNorm = this.getNormalizedFromArray(
-      this.settingArrays.rounds,
-      setting.rounds
+    const normFrac = this.getNormalizedFromArray(
+      this.settingArrays.fractions,
+      frac
     )
-    const stepsNorm = this.getNormalizedFromArray(
+    const normRounds = this.getNormalizedFromArray(
       this.settingArrays.rounds,
       setting.rounds
     )
 
-    setSliderValue(this.slider1, minNorm)
-    setSliderValue(this.slider2, maxNorm)
-    setSliderValue(this.slider3, stepsNorm)
+    setSliderValue(this.slider1, normWhole) // целая часть
+    setSliderValue(this.slider3, normFrac) // дробная часть
+    setSliderValue(this.slider2, normRounds) // раунды
   }
 
   show(state, setting) {
     this.container.setVisible(state)
     if (state) {
       if (setting) {
-        // console.log('Auto show', setting)
         this.draftSetting = { ...setting }
         this.previousValues = { ...setting }
       }
 
       this.setSliders(this.draftSetting)
-      this.notation.update(this.draftSetting)
+      this.displaysUpdate(this.draftSetting)
       // this.updateChart(this.draftSetting)
       this.updateCreateButton()
     }
   }
 
   makeChartBarsFromSettings(setting) {
-    const minIndex = this.settingArrays.payout.indexOf(setting.payout)
+    const minIndex = this.settingArrays.cashout.indexOf(
+      Math.trunc(setting.cashout)
+    )
     const maxIndex = this.settingArrays.rounds.indexOf(setting.rounds)
 
-    const chartHeight = this.chart.chartHeight
+    const chartHeight = this.chart?.chartHeight ?? 1
     const minStart = 0.05 * chartHeight
     const minFinish = 0.15 * chartHeight
     const maxStart = 0.3 * chartHeight
     const maxFinish = 1 * chartHeight
 
-    const normMin = minIndex / (this.settingArrays.payout.length - 1)
+    const normMin = minIndex / (this.settingArrays.cashout.length - 1)
     const normMax = maxIndex / (this.settingArrays.rounds.length - 1)
 
-    const firstBarHeight = minStart + normMin * (minFinish - minStart)
-    const lastBarHeight = maxStart + normMax * (maxFinish - maxStart)
-
-    const curveFactor = 1.3 + 20 / setting.rounds
-
-    const bars = []
-    for (let i = 0; i < this.chart.barsCount; i++) {
-      const t = i / (this.chart.barsCount - 1)
-      const curvedT = Math.pow(t, curveFactor)
-      const height = firstBarHeight * (1 - curvedT) + lastBarHeight * curvedT
-      bars.push(Phaser.Math.Clamp(height / chartHeight, 0, 1))
-    }
-
-    return bars
+    return [
+      { x: 0, y0: minStart, y1: minFinish, norm: normMin },
+      { x: 100, y0: maxStart, y1: maxFinish, norm: normMax },
+    ]
   }
 }

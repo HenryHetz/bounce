@@ -94,7 +94,14 @@ export default class PreloadScene extends Phaser.Scene {
     // )
 
     this.load.image('button_rules', 'assets/sprites/elements/button_rules.png')
-    this.load.image('button_auto', 'assets/sprites/elements/button_auto.png')
+    this.load.image(
+      'button_auto_on',
+      'assets/sprites/elements/button_auto_on.png'
+    )
+    this.load.image(
+      'button_auto_off',
+      'assets/sprites/elements/button_auto_off.png'
+    )
     this.load.image('button_tuner', 'assets/sprites/elements/button_tuner.png')
     this.load.image('button_close', 'assets/sprites/elements/button_close.png')
     this.load.image('button_reset', 'assets/sprites/elements/button_reset.png')
@@ -102,10 +109,10 @@ export default class PreloadScene extends Phaser.Scene {
       'slider_button',
       'assets/sprites/elements/slider_button.png'
     )
-    this.load.image(
-      'button_create',
-      'assets/sprites/elements/button_create.png'
-    )
+    // this.load.image(
+    //   'button_create',
+    //   'assets/sprites/elements/button_create.png'
+    // )
     this.load.image(
       'button_bet_minus',
       'assets/sprites/elements/button_bet_minus.png'

@@ -65,11 +65,13 @@ export default class GameScene extends Phaser.Scene {
     this.betAllowed = false
 
     // AUTOBET & RISK SETTINGS
-    this.houseEdge = 1
-    this.defaultAutoSetting = DEFAULT_AUTOBET_SETTING
-    this.currentAutoSetting = { ...DEFAULT_AUTOBET_SETTING }
+    this.houseEdge = 1 // server
+
     this.defaultRiskSetting = DEFAULT_RISK_SETTING
     this.currentRiskSetting = { ...DEFAULT_RISK_SETTING }
+
+    this.defaultAutoSetting = DEFAULT_AUTOBET_SETTING
+    this.currentAutoSetting = { ...DEFAULT_AUTOBET_SETTING }
 
     // TWEENS (DEV)
     this.tweens.timeScale = 1
@@ -121,6 +123,8 @@ export default class GameScene extends Phaser.Scene {
     this.setupFSMHandlers()
 
     // start loop
+    // в реале нужно дождаться от сервера таблицу множителей
+    // и команду на старт раунда
     this.fsm.toCountdown()
   }
   handleButtonClick() {
@@ -137,28 +141,8 @@ export default class GameScene extends Phaser.Scene {
       this.cashOutAllowed &&
       this.hasBet &&
       !this.hasCashOut
-    ) {
-      // обработка вывода денег
-      this.setCashOutAllowed(false)
-
-      this.hasCashOut = true
-      this.sounds.cashout.play()
-      // если выход после 0, то нужно что-то менять...
-      if (this.stakeValue <= 0) {
-        this.stakeValue = this.currentBetValue //
-      }
-
-      this.currentDeposit += this.stakeValue // добавляем к депозиту
-
-      this.events.emit('gameEvent', {
-        mode: 'CASHOUT',
-        hasCashOut: this.hasCashOut,
-        stakeValue: this.stakeValue,
-        deposit: this.currentDeposit,
-      })
-
-      this.stakeValue = 0
-    }
+    )
+      this.cashout('manual')
   }
   makeBet() {
     this.hasBet = true
@@ -174,6 +158,30 @@ export default class GameScene extends Phaser.Scene {
       deposit: this.currentDeposit,
     })
   }
+  cashout(method) {
+    // console.log('cashout method', method)
+    this.setCashOutAllowed(false)
+
+    this.hasCashOut = true
+    this.sounds.cashout.play()
+    // если выход после 0, то нужно что-то менять...
+    if (this.stakeValue <= 0) {
+      // что-то странное
+      this.stakeValue = this.currentBetValue //
+    }
+
+    this.currentDeposit += this.stakeValue // добавляем к депозиту
+
+    this.events.emit('gameEvent', {
+      mode: 'CASHOUT',
+      hasCashOut: this.hasCashOut,
+      stakeValue: this.stakeValue,
+      deposit: this.currentDeposit,
+      method,
+    })
+
+    this.stakeValue = 0
+  }
   createEvents() {
     this.events.on('riskTuner:apply', (newRiskSetting) => {
       // console.log('[GameScene] riskTuner:apply', newRiskSetting)
@@ -184,12 +192,13 @@ export default class GameScene extends Phaser.Scene {
       })
     })
     this.events.on('autoBetting:apply', (newSetting) => {
-      console.log('[GameScene] autoBetting:apply', newSetting)
-      this.pendingAutoSetting = { ...newSetting }
-      this.events.emit('gameEvent', {
-        mode: 'AUTO_SETTING_PENDING',
-        // betValue: this.currentBetValue,
-      })
+      // console.log('[GameScene] autoBetting:apply', newSetting)
+      this.handleAutoSetting(newSetting)
+      // this.pendingAutoSetting = { ...newSetting }
+      // this.events.emit('gameEvent', {
+      //   mode: 'AUTO_SETTING_PENDING',
+      //   // betValue: this.currentBetValue,
+      // })
     })
     this.events.on('betChanged', (value) => {
       // console.log('[GameScene] betChanged', value, this.betAllowed)
@@ -202,6 +211,8 @@ export default class GameScene extends Phaser.Scene {
         })
       }
     })
+    this.game.events.on(Phaser.Core.Events.BLUR, () => this.scene.pause())
+    this.game.events.on(Phaser.Core.Events.FOCUS, () => this.scene.resume())
   }
   createSounds() {
     this.sounds = {
@@ -294,6 +305,10 @@ export default class GameScene extends Phaser.Scene {
     if (this.pendingRiskSetting)
       this.handleRiskSettings(this.pendingRiskSetting)
 
+    // if (this.pendingAutoSetting) this.handleAutoSetting(this.pendingAutoSetting)
+    if (this.currentAutoSetting.rounds > 0) this.quickMode = true
+    else this.quickMode = false
+
     let countDown = 6
     if (this.quickMode) countDown = 4
 
@@ -352,13 +367,15 @@ export default class GameScene extends Phaser.Scene {
         this.bounceCount = 0
         this.roundCounter++
 
-        if (this.pendingAutoSetting)
-          this.handleAutoSetting(this.pendingAutoSetting)
+        // if (this.pendingAutoSetting)
+        //   this.handleAutoSetting(this.pendingAutoSetting)
 
         // автоигра
         if (this.currentAutoSetting.rounds > 0 && !this.hasBet) {
           this.currentAutoSetting.rounds-- // слишком просто?
-          console.log('currentAutoSetting', this.currentAutoSetting.rounds)
+          // console.log('currentAutoSetting', this.currentAutoSetting.rounds)
+          if (this.currentAutoSetting.rounds === 0)
+            this.handleAutoSetting(this.currentAutoSetting)
           this.makeBet()
         }
 
@@ -390,6 +407,8 @@ export default class GameScene extends Phaser.Scene {
 
       if (this.bounceCount === 0 && !this.cashOutAllowed)
         this.setCashOutAllowed(true)
+
+      if (this.currentAutoSetting.cashout > 0) this.checkAutoCashout(multiplier)
 
       this.bounceCount++
       // this.sounds.coin.play()
@@ -461,7 +480,15 @@ export default class GameScene extends Phaser.Scene {
       this.isCrashed = true
     }
   }
-
+  checkAutoCashout(multiplier) {
+    if (
+      this.cashOutAllowed &&
+      this.hasBet &&
+      !this.hasCashOut &&
+      this.currentAutoSetting.cashout <= multiplier
+    )
+      this.cashout('auto')
+  }
   // вынести на сервер
   generateCrashTable(crashSetting) {
     // console.log('crashSetting', crashSetting)

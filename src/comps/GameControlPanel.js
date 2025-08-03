@@ -33,6 +33,16 @@ export class GameControlPanel {
       })
       .setOrigin(0.5)
 
+    this.autoCashoutLabel = this.scene.add
+      .text(this.stakeCounter.x, this.stakeCounter.y + 40, 'AUTO CASH: 2.11', {
+        font: '18px AvenirNextCondensedBold',
+        // color: '#fdd41d',
+        color: labelColor,
+      })
+      .setOrigin(0.5)
+      .setAlign('center')
+      .setAlpha(0)
+
     // BetStepper
     this.betStepper = new BetStepper(
       this.scene,
@@ -76,7 +86,7 @@ export class GameControlPanel {
 
     // Auto Button
     this.buttonAuto = this.scene.add
-      .image(indent, buttonY, 'button_auto')
+      .image(indent, buttonY, 'button_auto_off')
       .setOrigin(0.5)
       .setScale(0.8)
       .setInteractive()
@@ -142,6 +152,7 @@ export class GameControlPanel {
       BET_ALLOWED: this.onBetAllowed,
       BET: this.onBet,
       BOUNCE: this.onBounce,
+      AUTO_SETTING_CHANGED: this.onAutoSetChanged,
     }
   }
 
@@ -209,6 +220,11 @@ export class GameControlPanel {
       // this.scene.sounds.coin.play()
     }
   }
+  onAutoSetChanged(data) {
+    // console.log('onAutoSetChanged', data)
+    this.updateAutocashText(data.current.cashout)
+    this.updateAutoButton(data.current.rounds)
+  }
 
   // ==== Helpers ====
 
@@ -221,6 +237,19 @@ export class GameControlPanel {
     if (typeof value === 'number' && !isNaN(value)) {
       this.stakeCounter.setText(value.toFixed(2))
     }
+  }
+
+  updateAutocashText(value) {
+    if (typeof value === 'number' && !isNaN(value)) {
+      this.autoCashoutLabel.setText('AUTO CASH: ' + value.toFixed(2))
+      if (value === 0) this.autoCashoutLabel.alpha = 0
+      else this.autoCashoutLabel.alpha = 1
+    }
+  }
+
+  updateAutoButton(value) {
+    if (value) this.buttonAuto.setTexture('button_auto_on')
+    else this.buttonAuto.setTexture('button_auto_off')
   }
 
   updateActionButton(color, alpha = 1) {

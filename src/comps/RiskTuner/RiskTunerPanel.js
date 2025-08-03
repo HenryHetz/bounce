@@ -60,7 +60,7 @@ export class RiskTunerPanel {
     //   .setOrigin(0.5)
 
     this.naming = scene.add
-      .text(scene.sceneCenterX - 200, scene.gridUnit * 1.8, '#RISK_TUNER', {
+      .text(scene.sceneCenterX - 200, scene.gridUnit * 2, '#RISK_TUNER', {
         fontSize: '38px',
         color: '#FDD41D',
         fontFamily: 'walibi',
@@ -85,16 +85,18 @@ export class RiskTunerPanel {
       ]
       this.notation.setText(lines)
     }
-    const verticalIndent = 60
-    this.blockY = 6.5 * scene.gridUnit
+
+    const blockY = 7 * scene.gridUnit
+    const verticalIndent = 80
+
     // --- Чарт
-    this.chart = new RiskChart(scene, 120, this.blockY)
+    this.chart = new RiskChart(scene, 120, blockY)
 
     // --- Слайдеры
     this.slider1 = new RiskSlider(
       scene,
       320,
-      this.blockY + 2 * verticalIndent,
+      blockY + 2 * verticalIndent,
       'MIN PAYOUT',
       this.settingArrays.minPayout[0],
       this.settingArrays.minPayout[this.settingArrays.minPayout.length - 1]
@@ -102,7 +104,7 @@ export class RiskTunerPanel {
     this.slider2 = new RiskSlider(
       scene,
       320,
-      this.blockY + 3 * verticalIndent,
+      blockY + 3 * verticalIndent,
       'MAX PAYOUT',
       this.settingArrays.maxPayout[0],
       this.settingArrays.maxPayout[this.settingArrays.maxPayout.length - 1]
@@ -110,24 +112,26 @@ export class RiskTunerPanel {
     this.slider3 = new RiskSlider(
       scene,
       320,
-      this.blockY + 1 * verticalIndent,
+      blockY + 1 * verticalIndent,
       'STEPS',
       this.settingArrays.steps[0],
       this.settingArrays.steps[this.settingArrays.steps.length - 1]
     )
     // пресеты
+
     const presetContainer = scene.add
       .container(0, 10 * scene.gridUnit)
       .setDepth(20)
+      .setVisible(0)
 
-    const startX = 100
-    const indent = 110
+    const startX = 140
+    const indent = 90
 
     for (let index = 0; index < 5; index++) {
       const button = scene.add
         .image(startX + indent * index, 0, 'button_hell')
         .setOrigin(0.5)
-        .setScale(0.8)
+        .setScale(0.6)
       presetContainer.add(button)
     }
     // --- Кнопки

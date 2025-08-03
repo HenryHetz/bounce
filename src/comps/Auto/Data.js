@@ -1,26 +1,22 @@
 // на сервер
 
-export function generatePayoutFractionArray() {
+export function generateCashoutFractionArray() {
   const result = [0]
-
   for (let i = 1; i < 100; i++) {
-    result.push((i / 100).toFixed(2))
+    // было: (i / 100).toFixed(2) -> string
+    result.push(parseFloat((i / 100).toFixed(2))) // теперь number: 0.01, 0.02, ...
   }
-  // for (let i = 10; i < 100; i++) {
-  //   result.push(i * 10)
-  // }
   return result
 }
 
-export function generatePayoutNumbersArray() {
+export function generateCashoutNumbersArray() {
   const result = []
-
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; i < 11; i++) {
     result.push(i)
   }
-  // for (let i = 10; i < 100; i++) {
-  //   result.push(i * 10)
-  // }
+  for (let i = 2; i < 11; i++) {
+    result.push(i * 10)
+  }
   return result
 }
 
