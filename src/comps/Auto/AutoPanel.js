@@ -3,14 +3,17 @@ import {
   generateCashoutNumbersArray,
   generateRoundsArray,
 } from './Data'
-import { Slider } from './Slider'
-import { Chart } from './Chart'
+
 import {
   normalize,
   getDiscreteValue,
   getSliderValue,
   setSliderValue,
 } from './Utils'
+
+import { Slider } from './Slider'
+import { Chart } from './Chart'
+import { CashoutArc } from './CashoutArc'
 
 import { ButtonGraphics } from '../ButtonGraphics'
 
@@ -81,6 +84,8 @@ export class AutoPanel {
       const cashoutN = Phaser.Math.Clamp(Number(setting.cashout) / 100, 0, 1) // 👈 ЛИНЕЙНАЯ
 
       this.chart?.animateTo([roundsN, cashoutN])
+
+      this.cashoutArc.setValue(Number(setting.cashout))
     }
 
     const clamp = (v, a, b) => Math.min(b, Math.max(a, v))
@@ -137,6 +142,24 @@ export class AutoPanel {
     //   chartHeight,
     //   anchors: [this.displayRounds.x, this.displayCashout.x], // центры столбиков
     // })
+
+    this.cashoutArc = new CashoutArc(this.scene, {
+      x: this.displayCashout.x,
+      y: this.displayCashout.y - 6,
+      radius: 150,
+      thickness: 22,
+      min: 0,
+      max: 50,
+      startDeg: 200,
+      sweepDeg: 220,
+      anticlockwise: true, // чтобы росло «слева → вправо» по верхней дуге
+      trackColor: 0x0a2a4f,
+      trackAlpha: 0.28,
+      fillColor: 0xfdd41d,
+      duration: 500,
+      ease: 'Back.easeOut',
+      depth: 1, // внутри контейнера под текстом
+    })
 
     // --- Слайдеры
     this.slider1 = new Slider(
@@ -228,6 +251,8 @@ export class AutoPanel {
       this.naming,
       this.notation,
       // this.chart.graphics,
+      this.cashoutArc.gTrack,
+      this.cashoutArc.gFill,
       this.displayRounds,
       this.displayRoundsLabel,
       this.displayCashout,

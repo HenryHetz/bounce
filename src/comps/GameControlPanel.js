@@ -241,7 +241,7 @@ export class GameControlPanel {
 
   updateAutocashText(value) {
     if (typeof value === 'number' && !isNaN(value)) {
-      this.autoCashoutLabel.setText('AUTO CASH: ' + value.toFixed(2))
+      this.autoCashoutLabel.setText('AUTO CASHOUT X' + value.toFixed(2))
       if (value === 0) this.autoCashoutLabel.alpha = 0
       else this.autoCashoutLabel.alpha = 1
     }

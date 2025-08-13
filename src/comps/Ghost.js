@@ -6,10 +6,27 @@ export class Ghost extends Phaser.GameObjects.Image {
     this.scene.add.existing(this)
 
     this.init()
-    this.create()
+    // this.create()
+    this.createEvents()
+  }
+  createEvents() {
+    this.scene.events.on('gameEvent', (data) => {
+      if (
+        data.mode === 'FINISH' &&
+        !data.hasCashOut &&
+        data.hasBet &&
+        !this.active
+      ) {
+        const random = this.scene.rnd.between(0, 100)
+        // console.log('ghost activate', random)
+        if (random > 50) this.create()
+      }
+    })
     this.scene.events.on('update', this.update, this)
   }
-  init() {}
+  init() {
+    this.setAlive(false)
+  }
   create() {
     let y = this.scene.rnd.between(300, 700)
     let x = this.scene.rnd.between(100, 540)
@@ -19,25 +36,19 @@ export class Ghost extends Phaser.GameObjects.Image {
       .rope(x, y, 'ghost', null, 64, true)
       .setRotation(-1.6)
       .setScale(0.3)
-      .setAlpha(alpha)
-      .setActive(1)
+      .setAlpha(0)
+    // .setActive(0)
     this.ropeCount = 0
 
-    this.move()
+    this.activate()
   }
-  reset() {
-    // console.log('ghost reset');
-    let data = Ghost.generateData(this.scene)
-    this.x = data.x
-    this.y = data.y
-    // this.setTexture('ghost', 'ghost' + data.id)
+  activate() {
     this.setAlive(true)
-    this.init()
-    // console.log('coin reset', this.texture, this.width);
+    this.hide()
   }
-
   update(time, delta) {
     if (!this.active) return
+    // console.log('ghost update')
     this.ropeCount += 0.01 // скорость изгибов? - fix
     const curve = 0.1 // fix
     const amplitude = 20 // 10 - 20
@@ -47,35 +58,38 @@ export class Ghost extends Phaser.GameObjects.Image {
     for (let i = 0; i < points.length; i++) {
       points[i].y = Math.sin(i * curve + this.ropeCount) * amplitude
       points[i].x += up
-      if (points[i].x >= 2000) {
-        // console.log('points1', points[i].x)
-        points[i].x -= 2000
-        // console.log('points2', points[i].x)
-      }
+
+      // dev
+      // if (points[i].x >= 2000) {
+      //   // console.log('points1', points[i].x)
+      //   points[i].x -= 2000
+      //   // console.log('points2', points[i].x)
+      // }
     }
     // console.log('points2', points)
     this.ghost.setDirty()
   }
 
   setAlive(status) {
-    console.log('ghost setAlive', status)
+    // console.log('ghost setAlive', status)
     this.setVisible(status)
     this.setActive(status)
   }
-  move() {
+  hide() {
     this.scene.tweens.add({
       targets: this.ghost,
-      alpha: 0.4,
-      duration: 5000,
+      alpha: this.scene.rnd.between(0.1, 0.3),
+      duration: this.scene.rnd.between(2000, 5000),
+      delay: this.scene.rnd.between(200, 1000),
       yoyo: true,
-      repeat: 4,
+      repeat: 0,
       onComplete: () => {
-        // this.ghost.x = 200
-        // this.ghost.y = 600
-        // this.ghost.alpha = 0
+        this.setAlive(false)
+        this.destroy()
       },
     })
   }
+  destroy() {
+    this.ghost.destroy()
+  }
 }
-
-// export default Ghost

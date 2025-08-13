@@ -9,12 +9,13 @@ export class Background {
     this.startX = 420
     this.startY = 40
     this.scale = 1.15
+    this.alpha = 0.8
 
     this.bg = scene.add
       .image(this.startX, this.startY, 'main_bg')
       // .setOrigin(0)
       .setOrigin(0.6, 0.1)
-      .setAlpha(0.8)
+      .setAlpha(this.alpha)
       .setScale(this.scale)
 
     this.createEvents()
@@ -22,6 +23,16 @@ export class Background {
   createEvents() {
     this.scene.events.on('gameEvent', (data) => {
       this.handleEvent(data)
+    })
+    this.shake = this.scene.tweens.add({
+      targets: this.bg,
+      scale: { from: 1, to: 1.02 },
+      y: this.startY + 10,
+      yoyo: true,
+      // repeat: -1,
+      ease: 'Sine.easeInOut',
+      duration: 50,
+      paused: true,
     })
   }
   handleEvent(data) {
@@ -36,9 +47,13 @@ export class Background {
       // this.move()
     }
     if (data.mode === 'BOUNCE') {
+      if (data.multiplier >= 1) {
+        this.bg.alpha = this.alpha - data.count / 200
+      }
     }
     if (data.mode === 'FINISH') {
       this.stop()
+      this.bg.alpha = this.alpha
     }
   }
   reset() {

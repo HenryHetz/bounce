@@ -2,7 +2,9 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
+  base: './', // ✅ вместо '/' или '/bounce/'
   build: {
-    // ничего про external
+    outDir: 'bounce', // ← вот здесь имя выходной папки
+    emptyOutDir: true, // очищает перед сборкой
   },
 })

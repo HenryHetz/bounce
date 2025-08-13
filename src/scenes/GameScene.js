@@ -17,12 +17,13 @@ import { Ball } from '../comps/Ball'
 import { Platforms } from '../comps/Platforms'
 import { FSM } from '../comps/FSM'
 import { GameControlPanel } from '../comps/GameControlPanel'
-import { on } from 'ws'
+// import { on } from 'ws'
 
 import { DevUI } from '../comps/DevUI'
 import { LiveOpsManager } from '../liveOps/LiveOpsManager'
 // import { GhostGroup } from '../comps/GhostGroup.js'
 import { Ghost } from '../comps/Ghost'
+import { CameraManager } from '../comps/Camera/CameraManager'
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
@@ -45,7 +46,7 @@ export default class GameScene extends Phaser.Scene {
     this.distanceY = this.platformY - this.ballY
     this.buttonY = 11.5 * this.gridUnit
     this.buttonNameSpacing = 60
-    this.buttonIndent = 100
+    this.buttonIndent = 120
     this.labelColor = '#13469A'
     this.duration = 500
 
@@ -76,6 +77,13 @@ export default class GameScene extends Phaser.Scene {
     // TWEENS (DEV)
     this.tweens.timeScale = 1
     this.rnd = Phaser.Math.RND
+    this.smallShakeX = 5
+    this.medShakeX = 20
+
+    // Camera
+    this.camWidget = null
+    this.camNeedTap = false
+    this.camHint = null
   }
   create() {
     this.background = new Background(this)
@@ -83,7 +91,7 @@ export default class GameScene extends Phaser.Scene {
     this.devUI = new DevUI(this)
     this.cashoutChart = new CashoutChart(this)
     // this.liveOps = new LiveOpsManager(this) // нужно изучить
-    // this.ghost = new Ghost(this)
+    this.ghost = new Ghost(this)
 
     this.header = this.add
       .image(0, 0, 'header')
@@ -126,14 +134,49 @@ export default class GameScene extends Phaser.Scene {
     // в реале нужно дождаться от сервера таблицу множителей
     // и команду на старт раунда
     this.fsm.toCountdown()
+
+    this.cameraManager = new CameraManager(this)
+    // this.cameraManager.start() // метод работает, но нужно настраивать стоп и запись
+
+    // Камера 400x300 в левом верхнем углу
+    // this.camWidget = new CameraWidget(this, 20, 20)
+    // this.camWidget
+    //   .start()
+    //   .then(() => {
+    //     // камера успешно запустилась
+    //   })
+    //   .catch(() => {
+    //     // нужен тап (iOS / autoplay policy)
+    //     this.camNeedTap = true
+    //     this.camHint = this.add.text(24, 330, 'Tap to enable camera', {
+    //       font: '18px Arial',
+    //       color: '#ff6666',
+    //     })
+    //     this.input.once('pointerdown', () => {
+    //       this.camWidget
+    //         .start()
+    //         .then(() => {
+    //           this.camNeedTap = false
+    //           this.camHint && this.camHint.destroy()
+    //         })
+    //         .catch((err) => console.warn('[Camera] start error', err))
+    //     })
+    //   })
+
+    // // Хоткей на перезапуск
+    // this.input.keyboard?.on('keydown-R', () => {
+    //   this.camWidget && this.camWidget.destroy()
+    //   this.camWidget = new CameraWidget(this, 20, 20, 400, 300)
+    //   this.camWidget.start().catch((err) => console.warn(err))
+    // })
   }
   handleButtonClick() {
     // console.log('handleButtonClick')
     const state = this.fsm.getState()
     // console.log('handleButtonClick', state)
     if (state === 'COUNTDOWN' && !this.hasBet) {
-      // console.log('handleButtonClick bet')
-      this.makeBet()
+      this.handleBet()
+      return
     }
 
     if (
@@ -141,10 +184,12 @@ export default class GameScene extends Phaser.Scene {
       this.cashOutAllowed &&
       this.hasBet &&
       !this.hasCashOut
-    )
-      this.cashout('manual')
+    ) {
+      this.handleCashout('manual')
+      return
+    }
   }
-  makeBet() {
+  handleBet() {
     this.hasBet = true
     this.setBetAllowed(false)
 
@@ -158,8 +203,8 @@ export default class GameScene extends Phaser.Scene {
       deposit: this.currentDeposit,
     })
   }
-  cashout(method) {
-    // console.log('cashout method', method)
+  handleCashout(method) {
+    // console.log('handleCashout method', method)
     this.setCashOutAllowed(false)
 
     this.hasCashOut = true
@@ -258,7 +303,12 @@ export default class GameScene extends Phaser.Scene {
     ctx.fillRect(0, 0, width, height)
     canvas.refresh()
   }
-  update(time, delta) {}
+  update(time, delta) {
+    // if (this.camWidget && this.camWidget.ready) {
+    //   this.camWidget.update()
+    // }
+    // this.cameraManager?.update()
+  }
 
   // FSM setup
   setupFSMHandlers() {
@@ -376,7 +426,7 @@ export default class GameScene extends Phaser.Scene {
           // console.log('currentAutoSetting', this.currentAutoSetting.rounds)
           if (this.currentAutoSetting.rounds === 0)
             this.handleAutoSetting(this.currentAutoSetting)
-          this.makeBet()
+          this.handleBet()
         }
 
         this.fsm.toRound()
@@ -412,6 +462,11 @@ export default class GameScene extends Phaser.Scene {
 
       this.bounceCount++
       // this.sounds.coin.play()
+
+      // dev
+      // if (multiplier >= this.smallShakeX && multiplier < this.medShakeX)
+      //   this.cameras.main.shake(100, 0.002)
+      if (multiplier >= this.medShakeX) this.cameras.main.shake(100, 0.002)
     }
   }
   finish() {
@@ -487,7 +542,7 @@ export default class GameScene extends Phaser.Scene {
       !this.hasCashOut &&
       this.currentAutoSetting.cashout <= multiplier
     )
-      this.cashout('auto')
+      this.handleCashout('auto')
   }
   // вынести на сервер
   generateCrashTable(crashSetting) {
@@ -590,7 +645,7 @@ export default class GameScene extends Phaser.Scene {
   }
   initCrashIndex() {
     let random = Math.random()
-    // random = 0.9999999999999 // dev
+    random = 0.99 // dev
     let multiplier = null
     let index = 0
     let acc = 0

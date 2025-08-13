@@ -10,6 +10,7 @@ export class Ball {
     this.duration = scene.duration
     this.emitter = emitter
     this.bounceHandler = bounceHandler
+    this.depth = 10
 
     // this.ball = scene.add
     //   .image(this.x, this.y, 'ball')
@@ -21,15 +22,80 @@ export class Ball {
       .ellipse(this.x, this.y, this.diameter, this.diameter, this.color)
       .setOrigin(0.5, 1)
       .setAlpha(0)
+      .setDepth(this.depth)
 
     this.bounceTween = null
 
     this.createEvents()
+    this.createEffects()
+  }
+  createEffects() {
+    // Создаем emitter на старте сцены
+    this.ballTrailEmitter = this.scene.add.particles(
+      0,
+      0,
+      'red', // Твоя текстура трейла
+      {
+        follow: this.ball, // Привязываем к шару!
+        speed: { min: 10, max: 100 },
+        // angle: { min: 1800, max: 3600 },
+        // x: { min: -100, max: 100 },
+        lifespan: 1000,
+        alpha: { start: 0.5, end: 0 },
+        scale: { start: 5, end: 0 },
+        quantity: 1,
+        frequency: 25,
+        blendMode: 'ADD',
+        emitting: false,
+      }
+    )
+    // старый эмиттер в пигги
+    // this.tail = this.scene.add.particles('red');
+    // this.tailEmitter = this.tail.createEmitter({
+    //   speed: { min: 10, max: 50 },
+    //   lifespan: 3000,
+    //   gravityY: -50,
+    //   quantity: 1,
+    //   // scale: { start: 0.6, end: 0, ease: 'Power3' }, // большой размер частиц
+    //   scale: { start: 2, end: 0, ease: 'Power3' }, // малый размер частиц
+    //   blendMode: 'ADD', // ADD, COLOR_DODGE,
+    //   active: true,
+    // });
+    // пульсация
+    this.pulseTween = this.scene.tweens.add({
+      targets: this.ball,
+      scale: { from: 1, to: 1.05 },
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+      duration: 50,
+      paused: true,
+    })
+    // свечение
+  }
+  updateEffects(multiplier) {
+    // console.log('updateEffects', multiplier)
+    if (
+      multiplier >= this.scene.smallShakeX &&
+      !this.ballTrailEmitter.emitting
+    ) {
+      this.ballTrailEmitter.emitting = true
+      // this.pulseTween.resume()
+    }
+    if (multiplier >= this.scene.medShakeX && this.pulseTween.paused) {
+      console.log('updateEffects pulseTween')
+      this.pulseTween.resume()
+    }
+  }
+  update() {
+    // console.log('ball update')
+    // this.ballTrailEmitter.setPosition(this.ball.x, this.ball.y)
   }
   createEvents() {
     this.scene.events.on('gameEvent', (data) => {
       this.handleEvent(data)
     })
+    this.scene.events.on('update', this.update, this)
   }
   handleEvent(data) {
     if (data.mode === 'COUNTDOWN') {
@@ -42,6 +108,7 @@ export class Ball {
     }
     if (data.mode === 'BOUNCE') {
       this.bounce(this.bounceHandler)
+      this.updateEffects(data.multiplier)
     }
     if (data.mode === 'FINISH') {
       this.stop()
@@ -56,7 +123,6 @@ export class Ball {
       duration: 3000,
     })
   }
-
   up() {
     this.scene.tweens.add({
       targets: this.ball,
@@ -102,6 +168,9 @@ export class Ball {
     if (this.bounceTween) this.bounceTween.stop()
     this.emitter.explode(30, this.ball.x, this.ball.y)
     this.up()
+    // dev
+    this.ballTrailEmitter.emitting = false
+    if (this.pulseTween) this.pulseTween.pause()
   }
 
   setBounceTween(tween) {

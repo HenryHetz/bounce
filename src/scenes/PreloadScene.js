@@ -133,6 +133,7 @@ export default class PreloadScene extends Phaser.Scene {
 
     // particles
     this.load.image('yellow', 'assets/sprites/particles/yellow.png')
+    this.load.image('red', 'assets/sprites/particles/red.png')
   }
 
   startGame() {
