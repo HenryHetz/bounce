@@ -20,8 +20,7 @@ import { GameControlPanel } from '../comps/GameControlPanel'
 // import { on } from 'ws'
 
 import { DevUI } from '../comps/DevUI'
-import { LiveOpsManager } from '../liveOps/LiveOpsManager'
-// import { GhostGroup } from '../comps/GhostGroup.js'
+// import { LiveOpsManager } from '../liveOps/LiveOpsManager'
 import { Ghost } from '../comps/Ghost'
 import { CameraManager } from '../comps/Camera/CameraManager'
 
@@ -46,7 +45,7 @@ export default class GameScene extends Phaser.Scene {
     this.distanceY = this.platformY - this.ballY
     this.buttonY = 11.5 * this.gridUnit
     this.buttonNameSpacing = 60
-    this.buttonIndent = 120
+    this.buttonIndent = 110
     this.labelColor = '#13469A'
     this.duration = 500
 
@@ -89,7 +88,8 @@ export default class GameScene extends Phaser.Scene {
     this.background = new Background(this)
     // dev
     this.devUI = new DevUI(this)
-    this.cashoutChart = new CashoutChart(this)
+    // this.cashoutChart = new CashoutChart(this)
+    // this.botManager = new BotManager(this, this.betValues) - old?
     // this.liveOps = new LiveOpsManager(this) // нужно изучить
     this.ghost = new Ghost(this)
 
@@ -113,8 +113,6 @@ export default class GameScene extends Phaser.Scene {
 
     this.autoSetting = new AutoPanel(this, this.defaultAutoSetting)
 
-    // this.botManager = new BotManager(this, this.betValues)
-
     this.gameControlPanel = new GameControlPanel(this, {
       onCash: () => this.handleButtonClick(),
       onTuner: () => this.riskTuner.show(true),
@@ -135,40 +133,29 @@ export default class GameScene extends Phaser.Scene {
     // и команду на старт раунда
     this.fsm.toCountdown()
 
-    this.cameraManager = new CameraManager(this)
+    // dev
+    const cameraOpts = {
+      x: 290,
+      y: 120,
+      w: 320,
+      h: 360,
+      depth: 300,
+    }
+    this.cameraManager = new CameraManager(this, cameraOpts)
     // this.cameraManager.start() // метод работает, но нужно настраивать стоп и запись
+    // console.log('this.cameraManager', this.cameraManager.widget)
 
-    // Камера 400x300 в левом верхнем углу
-    // this.camWidget = new CameraWidget(this, 20, 20)
-    // this.camWidget
-    //   .start()
-    //   .then(() => {
-    //     // камера успешно запустилась
-    //   })
-    //   .catch(() => {
-    //     // нужен тап (iOS / autoplay policy)
-    //     this.camNeedTap = true
-    //     this.camHint = this.add.text(24, 330, 'Tap to enable camera', {
-    //       font: '18px Arial',
-    //       color: '#ff6666',
-    //     })
-    //     this.input.once('pointerdown', () => {
-    //       this.camWidget
-    //         .start()
-    //         .then(() => {
-    //           this.camNeedTap = false
-    //           this.camHint && this.camHint.destroy()
-    //         })
-    //         .catch((err) => console.warn('[Camera] start error', err))
-    //     })
-    //   })
-
-    // // Хоткей на перезапуск
-    // this.input.keyboard?.on('keydown-R', () => {
-    //   this.camWidget && this.camWidget.destroy()
-    //   this.camWidget = new CameraWidget(this, 20, 20, 400, 300)
-    //   this.camWidget.start().catch((err) => console.warn(err))
-    // })
+    if (this.cameraManager.widget)
+      this.add
+        .image(
+          this.cameraManager.widget.x + this.cameraManager.widget.w / 2,
+          this.cameraManager.widget.y + this.cameraManager.widget.h / 2,
+          'camera_frame'
+        )
+        .setOrigin(0.5)
+        .setAlpha(1)
+        .setScale(1)
+        .setDepth(this.cameraManager.widget.depth + 1)
   }
   handleButtonClick() {
     // console.log('handleButtonClick')
@@ -645,7 +632,7 @@ export default class GameScene extends Phaser.Scene {
   }
   initCrashIndex() {
     let random = Math.random()
-    random = 0.99 // dev
+    // random = 0.999 // dev
     let multiplier = null
     let index = 0
     let acc = 0

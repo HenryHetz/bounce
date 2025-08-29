@@ -18,16 +18,18 @@ export class CameraWidget {
    */
   constructor(scene, opts = {}) {
     this.scene = scene
-    this.x = 240
-    this.y = 120
-    this.w = 360
-    this.h = 360
+    this.x = opts.x || 280
+    this.y = opts.y || 180
+    this.w = opts.w || 320
+    this.h = opts.h || 360
+    // this.x = 640 - this.y - this.w
 
     // Настройки
     this.fit = opts.fit ?? 'cover' // 'cover' (кроп) или 'contain' (письма)
     this.mirror = opts.mirror ?? true // зеркало для фронталки
-    this.depth = opts.depth ?? 5
+    this.depth = opts.depth ?? -5
     this.border = opts.border ?? false
+    this.borderColor = 0xff0000
 
     // Внутреннее состояние
     this.texKey = `camtex_${Phaser.Utils.String.UUID()}`
@@ -91,7 +93,7 @@ export class CameraWidget {
     if (this.border) {
       this.frame = this.scene.add.graphics().setDepth(this.depth - 1)
       this.frame
-        .lineStyle(10, 0xffffff, 0.9)
+        .lineStyle(10, this.borderColor, 0.9)
         .strokeRect(this.x - 2, this.y - 2, this.w + 4, this.h + 4)
     }
 

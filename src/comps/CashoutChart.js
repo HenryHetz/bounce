@@ -22,6 +22,7 @@ export class CashoutChart {
       .setOrigin(0)
       .setAlpha(1)
     // .setScale(1)
+
     const label = this.scene.add
       .text(this.x + 10, this.y - 50, 'CASHOUTS', {
         font: '18px walibi',

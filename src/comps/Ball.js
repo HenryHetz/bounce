@@ -83,7 +83,7 @@ export class Ball {
       // this.pulseTween.resume()
     }
     if (multiplier >= this.scene.medShakeX && this.pulseTween.paused) {
-      console.log('updateEffects pulseTween')
+      // console.log('updateEffects pulseTween')
       this.pulseTween.resume()
     }
   }

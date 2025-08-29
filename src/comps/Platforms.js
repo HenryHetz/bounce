@@ -12,11 +12,14 @@ export class Platforms {
     this.distanceY = scene.distanceY
     this.gridUnit = scene.gridUnit
     this.duration = scene.duration
+    this.depth = 10
 
     this.startX = this.ballX + this.hiddingCount * this.spacing
     this.startY = scene.platformY
 
-    this.platforms = scene.add.container(this.startX, this.startY)
+    this.platforms = scene.add
+      .container(this.startX, this.startY)
+      .setDepth(this.depth)
 
     this.createPlatforms()
     // this.updatePlatforms(crashTable)

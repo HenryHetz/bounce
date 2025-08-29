@@ -10,9 +10,10 @@ export class CameraManager {
    *
    * Если нужно — опции можно поменять через this.cameraManager.configure({...})
    */
-  constructor(scene) {
+  constructor(scene, opts) {
     this.scene = scene
-
+    this.widgetOpts = opts
+    // console.log('cameraManager widgetOpts', this.widgetOpts)
     // === дефолтные настройки (без передачи из сцены) ===
     this.rect = { x: 300, y: 120, w: 320, h: 360 } // где рисуем окно камеры
     this.rule = { multMin: 2, stepsAfter: 3, durationMs: 10000 } // “красивый момент”
@@ -54,12 +55,12 @@ export class CameraManager {
     console.time('widget')
     if (!this.widget)
       this.widget = new CameraWidget(
-        this.scene
+        this.scene,
         // this.rect.x,
         // this.rect.y,
         // this.rect.w,
         // this.rect.h,
-        // this.widgetOpts
+        this.widgetOpts
       )
     return this.widget.start().then(() => this._onStarted())
   }
@@ -129,12 +130,12 @@ export class CameraManager {
 
     if (!this.widget)
       this.widget = new CameraWidget(
-        this.scene
+        this.scene,
         // this.rect.x,
         // this.rect.y,
         // this.rect.w,
         // this.rect.h,
-        // this.widgetOpts
+        this.widgetOpts
       )
 
     this.widget
@@ -168,12 +169,12 @@ export class CameraManager {
   startAndRecord(durationMs) {
     if (!this.widget) {
       this.widget = new CameraWidget(
-        this.scene
+        this.scene,
         // this.rect.x,
         // this.rect.y,
         // this.rect.w,
         // this.rect.h,
-        // this.widgetOpts
+        this.widgetOpts
       )
     }
 

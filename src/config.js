@@ -21,6 +21,6 @@ export default {
   render: {
     powerPreference: 'high-performance',
   },
-  backgroundColor: 0x111111,
+  backgroundColor: 0x060b14,
   scene: [BootScene, PreloadScene, GameScene],
 }

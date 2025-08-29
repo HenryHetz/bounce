@@ -17,6 +17,7 @@ export class Background {
       .setOrigin(0.6, 0.1)
       .setAlpha(this.alpha)
       .setScale(this.scale)
+      .setDepth(-10)
 
     this.createEvents()
   }

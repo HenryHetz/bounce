@@ -1,0 +1,41 @@
+{
+	"textures": [
+		{
+			"image": "smileys.png",
+			"format": "RGBA8888",
+			"size": {
+				"w": 1152,
+				"h": 720
+			},
+			"scale": 1,
+			"frames": [
+				{
+					"filename": "smileys.png",
+					"rotated": false,
+					"trimmed": false,
+					"sourceSize": {
+						"w": 1152,
+						"h": 720
+					},
+					"spriteSourceSize": {
+						"x": 0,
+						"y": 0,
+						"w": 1152,
+						"h": 720
+					},
+					"frame": {
+						"x": 0,
+						"y": 0,
+						"w": 1152,
+						"h": 720
+					}
+				}
+			]
+		}
+	],
+	"meta": {
+		"app": "https://www.codeandweb.com/texturepacker",
+		"version": "3.0",
+		"smartupdate": "$TexturePacker:SmartUpdate:dabe647c018cd97d3e4ba00a52f51221:b505320f9b94d81d0a608464180451f0:d9c9488ca4a8602992c3ee7351aa034b$"
+	}
+}
