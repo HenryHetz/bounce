@@ -1,16 +1,21 @@
 export class MoneyCounter {
   constructor(scene, initial = 0) {
     this.scene = scene
-    this.x = 450
-    this.y = 40
+    this.x = 625
+    this.y = 50
 
     this.label = scene.add
       .text(this.x, this.y, initial.toFixed(2), {
-        font: '24px walibi',
-        fill: 'white',
+        // font: '24px walibi',
+        // fill: 'white',
+        fontFamily: 'JapanRobot',
+        fontSize: '24px',
+        fill: scene.textColors.black,
+        // stroke: this.textColors.white,
+        // strokeThickness: 6
       })
-      .setOrigin(0, 0.5)
-      .setAlign('left')
+      .setOrigin(1, 0.5)
+      .setAlign('right')
       .setAlpha(1)
       .setDepth(210)
 

@@ -1,11 +1,12 @@
 export class Ball {
   constructor(scene, emitter, bounceHandler) {
     this.scene = scene
-    this.x = this.scene.ballX
-    this.y = this.scene.ballY
-    this.diameter = 80
-    this.color = 0xff0000 // красный цвет
-    this.distanceY = scene.distanceY
+    this.diameter = 110
+    this.x = 320 // this.scene.ballX
+    this.y = 160 + this.diameter / 2 // this.scene.ballY + this.diameter / 2
+
+    this.color = this.scene.standartColors.red // красный цвет
+    this.distanceY = 290 // scene.distanceY
     this.gridUnit = scene.gridUnit
     this.duration = scene.duration
     this.emitter = emitter
@@ -84,7 +85,7 @@ export class Ball {
     }
     if (multiplier >= this.scene.medShakeX && this.pulseTween.paused) {
       // console.log('updateEffects pulseTween')
-      this.pulseTween.resume()
+      // this.pulseTween.resume()
     }
   }
   update() {
@@ -104,10 +105,11 @@ export class Ball {
       this.reset()
     }
     if (data.mode === 'ROUND') {
-      this.fall(this.bounceHandler)
+      this.fall(this.bounceHandler) // это и this.bounce практически одно и тоже!
     }
     if (data.mode === 'BOUNCE') {
-      this.bounce(this.bounceHandler)
+      this.bounce(this.bounceHandler) // всё надо синхронизировать в update!!!
+      // this.fall(this.bounceHandler)
       this.updateEffects(data.multiplier)
     }
     if (data.mode === 'FINISH') {
@@ -142,25 +144,54 @@ export class Ball {
   fall(callback) {
     this.scene.tweens.add({
       targets: this.ball,
-      y: this.y + this.distanceY,
-      duration: this.duration,
+      y: this.y + 10,
+      duration: this.duration / 2, // this.duration
       //   yoyo: true,
-      ease: 'Sine.easeIn',
+      ease: 'Quad.easeIn', // 'Sine.easeIn'
       onComplete: () => {
-        if (callback) callback()
+        this.scene.tweens.add({
+          targets: this.ball,
+          y: this.y + this.distanceY,
+          // delay: this.duration / 2,
+          duration: this.duration / 2, // this.duration
+          //   yoyo: true,
+          ease: 'Quad.easeIn', // 'Sine.easeIn'
+          onComplete: () => {
+            if (callback) callback()
+            // this.bounce(callback)
+            // const timeNow = new Date().getTime();
+            console.log('hit', this.scene.elapsedSec)
+          },
+        })
       },
     })
+
   }
   bounce(callback) {
     this.scene.tweens.add({
       targets: this.ball,
-      y: this.y,
-      duration: this.duration,
-      yoyo: true,
-      ease: 'Sine.easeOut',
-      onYoyo: () => {},
+      y: this.y + 10,
+      duration: this.duration / 2, // this.duration
+      ease: 'Quad.easeOut',
       onComplete: () => {
-        if (callback) callback()
+        // setTimeout(() => {
+        //   if (callback) callback()
+        // }, this.duration / 2);
+        this.scene.tweens.add({
+          targets: this.ball,
+          y: this.y,
+          duration: this.duration / 2, // this.duration
+          // yoyo: true,
+          ease: 'Quad.easeOut',
+          // onYoyo: () => { },
+          onComplete: () => {
+            // if (callback) callback()
+            this.fall(callback)
+            // console.log('apogei',)
+          },
+        })
+        // if (callback) callback()
+        // console.log('bounce',)
       },
     })
   }

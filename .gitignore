@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Optional: local backups (если не хочешь их в репо)
+old/
+src/old/
+server_old/

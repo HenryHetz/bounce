@@ -21,6 +21,11 @@ export default {
   render: {
     powerPreference: 'high-performance',
   },
+  fps: {
+    target: 120,
+    forceSetTimeOut: true,
+    smoothStep: false,
+  },
   backgroundColor: 0x060b14,
   scene: [BootScene, PreloadScene, GameScene],
 }

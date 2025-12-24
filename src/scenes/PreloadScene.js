@@ -18,7 +18,8 @@ export default class PreloadScene extends Phaser.Scene {
         'AvenirNextCondensedBold',
         'url(assets/fonts/AvenirNextCondensedBold.ttf)'
       ),
-      // new FontFace('anotherFont', 'url(assets/fonts/AnotherFont.ttf)')
+      new FontFace('JapanRobot', 'url(assets/fonts/JapaneseRobot.ttf)'),
+      new FontFace('AvenirBlack', 'url(assets/fonts/AvenirBlack.ttf)'),
     ]
 
     // загружаем все параллельно
@@ -42,9 +43,10 @@ export default class PreloadScene extends Phaser.Scene {
       })
     this.load.once('complete', () => {
       // можно подождать для красоты (как у тебя было)
-      this.time.delayedCall(1000, () => {
-        this.scene.start('Game')
-      })
+      this.scene.start('Game')
+      // this.time.delayedCall(1000, () => {
+      //   this.scene.start('Game')
+      // })
     })
   }
   createScreen() {
@@ -73,12 +75,13 @@ export default class PreloadScene extends Phaser.Scene {
   }
   preloadAssets() {
     // dev
-    this.load.image('button_hell', 'assets/sprites/elements/button_hell.png')
-    this.load.image('camera_frame', 'assets/sprites/elements/camera_frame.png')
+    this.load.image('flash_copy', 'assets/sprites/elements/flash_copy.png')
+    this.load.image('camera_frame', 'assets/sprites/dev/camera_frame.png')
     // this.load.image('dev_ui', 'assets/sprites/dev/drops_ui_5.png')
-    this.load.image('grid', 'assets/sprites/dev/grid.png')
+    // this.load.image('grid', 'assets/sprites/dev/grid.png')
     this.load.image('co', 'assets/sprites/dev/co_2.png')
-    this.load.image('bot_chat', 'assets/sprites/dev/bot_chart_4.jpg')
+    // this.load.image('bot_chat', 'assets/sprites/dev/bot_chart_4.jpg')
+
     // атласы
     this.load.atlas(
       'smileys',
@@ -86,9 +89,9 @@ export default class PreloadScene extends Phaser.Scene {
       'assets/sprites/sheets/smileys.json'
     )
     // bg
-    this.load.image('main_bg', 'assets/sprites/bg/main_bg.jpg')
-    this.load.image('tuner_bg', 'assets/sprites/bg/tuner_bg.png')
-    this.load.image('auto_bg', 'assets/sprites/bg/auto_bg.jpg')
+    this.load.image('main_bg', 'assets/sprites/bg/BOUNCE_FUJI_BG.png')
+    this.load.image('tuner_bg', 'assets/sprites/bg/tuner_bg.jpg')
+    // this.load.image('auto_bg', 'assets/sprites/bg/auto_bg.jpg')
     // elements
     // this.load.image('ball', 'assets/sprites/elements/ball_2.png')
     // this.load.image('platform', 'assets/sprites/elements/platform_2.png')

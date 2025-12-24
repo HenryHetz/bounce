@@ -220,6 +220,13 @@ export class RiskTunerPanel {
 
   createEvents() {
     const { scene } = this
+    // слушаем
+    scene.events.on('gameEvent', (data) => {
+      // if (data.mode === 'RISK_SETTING_PENDING')
+      // this.currentRiskSetting = { ...data.setting }
+      if (data.mode === 'RISK_SETTING_CHANGED')
+        this.currentRiskSetting = { ...data.current }
+    })
 
     // --- Слайдеры активируем
     scene.input.setDraggable([

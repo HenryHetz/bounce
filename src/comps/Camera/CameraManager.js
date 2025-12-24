@@ -210,7 +210,7 @@ export class CameraManager {
   }
 
   _onStarted() {
-    console.log('camera _onStarted')
+    // console.log('camera _onStarted')
     if (!this.badge) {
       this.badge = this.scene.add.text(
         this.rect.x + 8,

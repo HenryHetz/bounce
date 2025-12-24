@@ -4,20 +4,18 @@ export class Background {
   constructor(scene) {
     this.scene = scene
     this.duration = scene.duration
-    // this.startX = 0
-    // this.startY = -50
-    this.startX = 420
-    this.startY = 40
-    this.scale = 1.15
-    this.alpha = 0.8
+    this.startX = 320
+    this.startY = 0
+    this.scale = 1.0
+    this.alpha = 1.0
 
     this.bg = scene.add
       .image(this.startX, this.startY, 'main_bg')
       // .setOrigin(0)
-      .setOrigin(0.6, 0.1)
+      .setOrigin(0.5, 0)
       .setAlpha(this.alpha)
       .setScale(this.scale)
-      .setDepth(-10)
+    // .setDepth(-10)
 
     this.createEvents()
   }
@@ -28,7 +26,7 @@ export class Background {
     this.shake = this.scene.tweens.add({
       targets: this.bg,
       scale: { from: 1, to: 1.02 },
-      y: this.startY + 10,
+      // y: this.startY + 10,
       yoyo: true,
       // repeat: -1,
       ease: 'Sine.easeInOut',
@@ -49,7 +47,7 @@ export class Background {
     }
     if (data.mode === 'BOUNCE') {
       if (data.multiplier >= 1) {
-        this.bg.alpha = this.alpha - data.count / 200
+        // this.bg.alpha = this.alpha - data.count / 200
       }
     }
     if (data.mode === 'FINISH') {

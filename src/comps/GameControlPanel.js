@@ -24,14 +24,26 @@ export class GameControlPanel {
     const labelColor = this.scene.labelColor
 
     // StakeCounter
-    this.stakeCounter = this.scene.add
-      .text(this.centerX, buttonY - 1.5 * this.gridUnit, '', {
-        font: '40px walibi',
-        fill: 'white',
-        stroke: 'black',
-        strokeThickness: 3,
+    this.stakeCounterShadow = this.scene.add
+      .text(this.centerX, buttonY - 1.5 * this.gridUnit + 3, '', {
+        fontFamily: 'JapanRobot',
+        fontSize: '40px',
+        fill: this.scene.textColors.black,
+        stroke: this.scene.textColors.red,
+        strokeThickness: 6
       })
       .setOrigin(0.5)
+
+    this.stakeCounter = this.scene.add
+      .text(this.centerX, buttonY - 1.5 * this.gridUnit, '', {
+        fontFamily: 'JapanRobot',
+        fontSize: '40px',
+        fill: this.scene.textColors.white,
+        // stroke: this.textColors.white,
+        // strokeThickness: 6
+      })
+      .setOrigin(0.5)
+
 
     this.autoCashoutLabel = this.scene.add
       .text(this.stakeCounter.x, this.stakeCounter.y + 40, 'AUTO CASH: 2.11', {
@@ -69,7 +81,7 @@ export class GameControlPanel {
       this.scene,
       this.centerX,
       buttonY,
-      0xff0000
+      'red'
     )
     // .setInteractive()
     // .setAlpha(0.5)
@@ -78,8 +90,13 @@ export class GameControlPanel {
 
     this.buttonActionLabel = this.scene.add
       .text(this.buttonAction.x, this.buttonAction.y, 'BET', {
-        font: '40px walibi',
-        fill: 'black',
+        // font: '40px walibi',
+        // fill: 'black',
+        fontFamily: 'JapanRobot',
+        fontSize: '40px',
+        fill: this.scene.textColors.black,
+        // stroke: this.scene.textColors.red,
+        // strokeThickness: 6
       })
       .setOrigin(0.5)
       .setAlign('center')
@@ -165,7 +182,8 @@ export class GameControlPanel {
     this.updateActionButton('red')
     this.updateActionLabel('BET', 'black')
 
-    this.stakeCounter.clearTint()
+    // this.stakeCounter.clearTint()
+    this.stakeCounter.alpha = 1
     this.betStepper.setValue(data.betValue)
     this.updateStakeText(data.betValue)
   }
@@ -184,11 +202,12 @@ export class GameControlPanel {
 
   onCashout() {
     // this.buttonAction.setTexture('button_black')
-    this.updateActionLabel('OUT', '#ff0000')
+    this.updateActionLabel('OUT', this.scene.textColors.red)
     // this.updateActionButton('button_black')
     this.updateActionButton('black')
 
-    this.stakeCounter.setTint(0xff0000)
+    // this.stakeCounter.setTint(0xff0000)
+    this.stakeCounter.alpha = 0
   }
 
   onCashoutAllowed(data) {
@@ -236,6 +255,7 @@ export class GameControlPanel {
   updateStakeText(value) {
     if (typeof value === 'number' && !isNaN(value)) {
       this.stakeCounter.setText(value.toFixed(2))
+      this.stakeCounterShadow.setText(value.toFixed(2))
     }
   }
 

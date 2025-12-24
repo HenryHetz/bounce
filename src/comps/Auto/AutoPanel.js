@@ -46,9 +46,11 @@ export class AutoPanel {
 
     // --- Фон
     this.bg = scene.add
-      .image(0, 80, 'auto_bg')
+      .image(0, 80, 'tuner_bg')
       .setOrigin(0)
       .setAlpha(1)
+      // .setScale(1.3)
+      // .setTint(0x000000)
       .setInteractive()
 
     // --- Заголовок
@@ -64,11 +66,11 @@ export class AutoPanel {
     this.notation = scene.add
       .text(
         scene.sceneCenterX,
-        scene.gridUnit * 2.5,
-        'Selecting "0" means no action.',
+        scene.gridUnit * 2.6,
+        'Selecting "0" means no action',
         {
           fontSize: '24px',
-          color: '#13469A', // жёлтый '#FDD41D'
+          color: '#FDD41D', // жёлтый '#FDD41D'
           fontFamily: 'AvenirNextCondensedBold',
         }
       )
@@ -80,43 +82,54 @@ export class AutoPanel {
       this.displayCashout.setText(Number(setting.cashout).toFixed(2))
 
       // dev
-      const roundsN = clamp(setting.rounds / 100, 0, 1)
-      const cashoutN = Phaser.Math.Clamp(Number(setting.cashout) / 100, 0, 1) // 👈 ЛИНЕЙНАЯ
+      // const roundsN = clamp(setting.rounds / 100, 0, 1)
+      // const cashoutN = Phaser.Math.Clamp(Number(setting.cashout) / 100, 0, 1) // 👈 ЛИНЕЙНАЯ
 
-      this.chart?.animateTo([roundsN, cashoutN])
-
-      this.cashoutArc.setValue(Number(setting.cashout))
+      // this.chart?.animateTo([roundsN, cashoutN])
+      // this.cashoutArc.setValue(Number(setting.cashout))
     }
 
-    const clamp = (v, a, b) => Math.min(b, Math.max(a, v))
-    const logNorm = (v, min, max) => {
-      const vv = clamp(v, min, max)
-      return (
-        (Math.log10(vv) - Math.log10(min)) / (Math.log10(max) - Math.log10(min))
-      )
-    }
+    // const clamp = (v, a, b) => Math.min(b, Math.max(a, v))
+    // const logNorm = (v, min, max) => {
+    //   const vv = clamp(v, min, max)
+    //   return (
+    //     (Math.log10(vv) - Math.log10(min)) / (Math.log10(max) - Math.log10(min))
+    //   )
+    // }
+
     const displayY = scene.gridUnit * 5.5
     const displayGap = 80
+    const labelGap = 60
+
     // Крупные цифры
     this.displayRounds = scene.add
       .text(scene.sceneCenterX, displayY + displayGap, '', {
-        fontSize: '60px',
+        fontSize: '80px',
         color: 'white',
         fontFamily: 'walibi',
       })
       .setOrigin(0.5)
-    // .setDepth(20)
+
     this.displayRoundsLabel = scene.add
-      .text(this.displayRounds.x, this.displayRounds.y - 50, 'ROUNDS', {
+      .text(this.displayRounds.x, this.displayRounds.y - labelGap, 'ROUNDS', {
         fontFamily: 'AvenirNextCondensedBold',
-        fontSize: '24px',
+        fontSize: '32px',
         color: '#13469A',
       })
       .setOrigin(0.5)
 
+    this.displayRoundsLabelPlay = this.scene.add
+      .image(
+        this.displayRoundsLabel.x + 80,
+        this.displayRounds.y - labelGap,
+        'button_auto_on'
+      )
+      .setOrigin(0.5)
+      .setScale(0.3)
+
     this.displayCashout = scene.add
       .text(scene.sceneCenterX, displayY - displayGap, '', {
-        fontSize: '60px',
+        fontSize: '80px',
         color: 'white',
         fontFamily: 'walibi',
       })
@@ -124,11 +137,16 @@ export class AutoPanel {
     // .setDepth(20)
 
     this.displayCashoutLabel = scene.add
-      .text(this.displayCashout.x, this.displayCashout.y - 50, 'CASHOUT', {
-        fontFamily: 'AvenirNextCondensedBold',
-        fontSize: '24px',
-        color: '#13469A',
-      })
+      .text(
+        this.displayCashout.x,
+        this.displayCashout.y - labelGap,
+        'CASHOUT 💰',
+        {
+          fontFamily: 'AvenirNextCondensedBold',
+          fontSize: '32px',
+          color: '#13469A',
+        }
+      )
       .setOrigin(0.5)
     // --- Чарт
     const chartHeight = 240
@@ -143,23 +161,23 @@ export class AutoPanel {
     //   anchors: [this.displayRounds.x, this.displayCashout.x], // центры столбиков
     // })
 
-    this.cashoutArc = new CashoutArc(this.scene, {
-      x: this.displayCashout.x,
-      y: this.displayCashout.y - 6,
-      radius: 150,
-      thickness: 22,
-      min: 0,
-      max: 50,
-      startDeg: 200,
-      sweepDeg: 220,
-      anticlockwise: true, // чтобы росло «слева → вправо» по верхней дуге
-      trackColor: 0x0a2a4f,
-      trackAlpha: 0.28,
-      fillColor: 0xfdd41d,
-      duration: 500,
-      ease: 'Back.easeOut',
-      depth: 1, // внутри контейнера под текстом
-    })
+    // this.cashoutArc = new CashoutArc(this.scene, {
+    //   x: this.displayCashout.x,
+    //   y: this.displayCashout.y - 6,
+    //   radius: 150,
+    //   thickness: 22,
+    //   min: 0,
+    //   max: 50,
+    //   startDeg: 200,
+    //   sweepDeg: 220,
+    //   anticlockwise: true, // чтобы росло «слева → вправо» по верхней дуге
+    //   trackColor: 0x0a2a4f,
+    //   trackAlpha: 0.28,
+    //   fillColor: 0xfdd41d,
+    //   duration: 500,
+    //   ease: 'Back.easeOut',
+    //   depth: 1, // внутри контейнера под текстом
+    // })
 
     // --- Слайдеры
     this.slider1 = new Slider(
@@ -251,10 +269,11 @@ export class AutoPanel {
       this.naming,
       this.notation,
       // this.chart.graphics,
-      this.cashoutArc.gTrack,
-      this.cashoutArc.gFill,
+      // this.cashoutArc.gTrack,
+      // this.cashoutArc.gFill,
       this.displayRounds,
       this.displayRoundsLabel,
+      this.displayRoundsLabelPlay,
       this.displayCashout,
       this.displayCashoutLabel,
       this.buttonClose,
@@ -414,6 +433,7 @@ export class AutoPanel {
     this.container.setVisible(state)
     if (state) {
       if (setting) {
+        this.currentSetting = { ...setting }
         this.draftSetting = { ...setting }
         this.previousValues = { ...setting }
       }

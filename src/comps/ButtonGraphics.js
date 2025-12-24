@@ -1,12 +1,14 @@
 export class ButtonGraphics extends Phaser.GameObjects.Graphics {
   constructor(scene, x, y, color) {
     super(scene, { x, y })
+    this.scene = scene
     // console.log('ButtonGraphics', x, y, color)
     // Параметры по умолчанию
     const width = 240
     const height = 100
     const skew = 8
     const fillColor = this.colorStringToHex(color)
+    // const fillColor = color
     const strokeColor = 'black'
     const strokeWidth = 3
 
@@ -65,10 +67,10 @@ export class ButtonGraphics extends Phaser.GameObjects.Graphics {
   }
   colorStringToHex(name) {
     const colors = {
-      red: 0xff0000,
-      black: 0x000000,
-      yellow: 0xfdd41d,
-      white: 0xffffff,
+      red: this.scene.standartColors.red,
+      black: this.scene.standartColors.black,
+      yellow: this.scene.standartColors.yellow,
+      white: this.scene.standartColors.white,
       // green: 0x00ff00,
       // blue: 0x0000ff,
       // gray: 0x888888,
