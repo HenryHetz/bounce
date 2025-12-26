@@ -6,7 +6,7 @@ export class Ball {
     this.y = 160 + this.diameter / 2 // this.scene.ballY + this.diameter / 2
 
     this.color = this.scene.standartColors.red // красный цвет
-    this.distanceY = 290 // scene.distanceY
+    this.distanceY = 290 // scene.distanceY 
     this.gridUnit = scene.gridUnit
     this.duration = scene.duration
     this.emitter = emitter
@@ -141,11 +141,69 @@ export class Ball {
       },
     })
   }
+  fallAndBounce(callback) {
+    const scene = this.scene;
+    const y0 = this.y;
+
+    const creep = 10;
+    const drop = this.distanceY;
+    const overshoot = 6;
+    const t = this.duration;
+
+    scene.tweens.killTweensOf(this.ball);
+
+    scene.tweens.timeline({
+      targets: this.ball,
+      tweens: [
+        // 1. Медленное сползание
+        {
+          y: y0 + creep,
+          duration: t * 0.25,
+          ease: 'Sine.easeInOut'
+        },
+
+        // 2. Резкое ускорение вниз
+        {
+          y: y0 + drop,
+          duration: t * 0.35,
+          ease: 'Quart.easeIn'
+        },
+
+        // 3. УДАР (компрессия)
+        {
+          y: y0 + drop + overshoot,
+          duration: t * 0.05,
+          ease: 'Quad.easeIn',
+
+          onComplete: () => {
+            // 💥 МОМЕНТ УДАРА
+            if (callback) callback();
+            // логика краша / расчёт / фиксация
+            console.log('HIT', scene.elapsedSec);
+          }
+        },
+
+        // 4. Резкий отскок
+        {
+          y: y0 + drop * 0.35,
+          duration: t * 0.15,
+          ease: 'Back.easeOut'
+        },
+
+        // 5. Медленное замирание
+        {
+          y: y0,
+          duration: t * 0.20,
+          ease: 'Sine.easeOut'
+        }
+      ]
+    });
+  }
   fall(callback) {
     this.scene.tweens.add({
       targets: this.ball,
       y: this.y + 10,
-      duration: this.duration / 2, // this.duration
+      duration: 300, // this.duration / 2
       //   yoyo: true,
       ease: 'Quad.easeIn', // 'Sine.easeIn'
       onComplete: () => {
@@ -153,14 +211,14 @@ export class Ball {
           targets: this.ball,
           y: this.y + this.distanceY,
           // delay: this.duration / 2,
-          duration: this.duration / 2, // this.duration
+          duration: 200, // this.duration / 2
           //   yoyo: true,
           ease: 'Quad.easeIn', // 'Sine.easeIn'
           onComplete: () => {
             if (callback) callback()
             // this.bounce(callback)
             // const timeNow = new Date().getTime();
-            console.log('hit', this.scene.elapsedSec)
+            // console.log('hit', this.scene.elapsedSec)
           },
         })
       },
@@ -171,8 +229,8 @@ export class Ball {
     this.scene.tweens.add({
       targets: this.ball,
       y: this.y + 10,
-      duration: this.duration / 2, // this.duration
-      ease: 'Quad.easeOut',
+      duration: 300, // this.duration
+      ease: 'Quad.easeOut', // Quart
       onComplete: () => {
         // setTimeout(() => {
         //   if (callback) callback()
@@ -180,9 +238,9 @@ export class Ball {
         this.scene.tweens.add({
           targets: this.ball,
           y: this.y,
-          duration: this.duration / 2, // this.duration
+          duration: 200, // this.duration
           // yoyo: true,
-          ease: 'Quad.easeOut',
+          ease: 'Quad.easeOut', // Qubic
           // onYoyo: () => { },
           onComplete: () => {
             // if (callback) callback()

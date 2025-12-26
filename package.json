@@ -9,11 +9,13 @@
     "preview": "vite preview",
     "serve-watch": "nodemon server.js",
     "start": "NODE_ENV=production node server.js",
-    "build-and-serve": "npm run build && npm run start"
+    "build-and-serve": "npm run build && npm run start",
+    "deploy": "npm run build && gh-pages -d dist"
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
     "eslint": "^9.29.0",
+    "gh-pages": "^6.3.0",
     "globals": "^16.2.0",
     "nodemon": "^3.1.10",
     "prettier": "^3.5.3",

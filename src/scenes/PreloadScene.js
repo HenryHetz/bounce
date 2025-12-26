@@ -89,9 +89,10 @@ export default class PreloadScene extends Phaser.Scene {
       'assets/sprites/sheets/smileys.json'
     )
     // bg
-    this.load.image('main_bg', 'assets/sprites/bg/BOUNCE_FUJI_BG.png')
+    this.load.image('main_bg', 'assets/sprites/bg/BOUNCE_FUJI_BG_2.png')
     this.load.image('tuner_bg', 'assets/sprites/bg/tuner_bg.jpg')
-    // this.load.image('auto_bg', 'assets/sprites/bg/auto_bg.jpg')
+    this.load.image('pattern', 'assets/sprites/bg/pattern.jpg')
+    // console.log('pattern texture key:', pattern.texture.key)
     // elements
     // this.load.image('ball', 'assets/sprites/elements/ball_2.png')
     // this.load.image('platform', 'assets/sprites/elements/platform_2.png')
@@ -131,7 +132,7 @@ export default class PreloadScene extends Phaser.Scene {
       'button_bet_plus',
       'assets/sprites/elements/button_bet_plus.png'
     )
-    this.load.image('header', 'assets/sprites/elements/header.png')
+    this.load.image('header', 'assets/sprites/bg/header.png')
     this.load.image('skull', 'assets/sprites/elements/skull_.png')
     this.load.image('ghost', 'assets/sprites/elements/ghost.png')
     this.load.image('volume_bar', 'assets/sprites/elements/volume_bar.png')
@@ -140,6 +141,9 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.audio('crash', 'assets/sounds/crash.mp3')
     this.load.audio('cashout', 'assets/sounds/cashout.mp3')
     this.load.audio('coin', 'assets/sounds/coin.mp3')
+    this.load.audio('domino', 'assets/sounds/domino_2.mp3')
+    this.load.audio('hit', 'assets/sounds/hit.mp3')
+    this.load.audio('jingle', 'assets/sounds/jingle.mp3')
 
     // particles
     this.load.image('yellow', 'assets/sprites/particles/yellow.png')

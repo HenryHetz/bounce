@@ -10,7 +10,7 @@ export class MoneyCounter {
         // fill: 'white',
         fontFamily: 'JapanRobot',
         fontSize: '24px',
-        fill: scene.textColors.black,
+        fill: scene.textColors.red,
         // stroke: this.textColors.white,
         // strokeThickness: 6
       })

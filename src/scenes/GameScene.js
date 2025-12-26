@@ -32,7 +32,7 @@ export default class GameScene extends Phaser.Scene {
   init() {
     // dev - prod
     this.isDev = true
-    this.houseEdge = 1.00 // его не должно быть в локале!
+    this.houseEdge = 0.00 // его не должно быть в локале!
 
     this.elapsedSec = 0;
 
@@ -48,7 +48,7 @@ export default class GameScene extends Phaser.Scene {
     this.ballX = 320
     this.ballY = 160
     this.platformY = this.gridUnit * 6.5
-    this.distanceY = this.platformY - this.ballY
+    this.distanceY = 290 + 60 // this.platformY - this.ballY
     this.buttonY = 11.5 * this.gridUnit
     this.buttonNameSpacing = 60
     this.buttonIndent = 110
@@ -97,14 +97,15 @@ export default class GameScene extends Phaser.Scene {
       black: 0x000000,
       gray: 0xD9D9D9,
       wrapper: 0x212838,
-      dark_red: 0x920000
+      dark_red: 0x920000,
+      dark_gray: 0x3d3d3d
     };
 
     // text
     this.textColors = {
       white: '#FBFAF8',
       red: '#FF0037', // '#E60000' '#920000ff'
-      gray: '#bcbcbcff', // '#cccccc'
+      gray: '#bcbcbcff', // '#cccccc' 'rgba(101, 101, 101, 1)'
       yellow: '#fcd912',
       blue: '#05edff',
       black: '#000000'
@@ -147,18 +148,18 @@ export default class GameScene extends Phaser.Scene {
     // this.liveOps = new LiveOpsManager(this) // нужно изучить
     // this.ghost = new Ghost(this)
 
-    // this.header = this.add
-    //   .image(0, 0, 'header')
-    //   .setOrigin(0)
-    //   .setAlpha(1)
-    //   .setScale(1)
-    //   .setDepth(200)
+    this.header = this.add
+      .image(320, 0, 'header')
+      .setOrigin(0.5, 0)
+      .setAlpha(1)
+      .setScale(1)
+      .setDepth(200)
 
     this.createParticles() // эммитер передается в Ball
 
     this.countdownCounter = new CountdownCounter(this)
     this.moneyCounter = new MoneyCounter(this, this.initialDeposit)
-    this.skull = new Skull(this)
+    // this.skull = new Skull(this)
     this.ball = new Ball(this, this.emitter, this.bounceHandler.bind(this))
     this.platforms = new Platforms(this, this.crashTable)
 
@@ -174,6 +175,9 @@ export default class GameScene extends Phaser.Scene {
     })
 
     if (!this.sounds) this.createSounds()
+    setTimeout(() => {
+      this.sounds.jingle.play()
+    }, 1000)
 
     this.fsm = new FSM()
     this.setupFSMHandlers()
@@ -322,10 +326,19 @@ export default class GameScene extends Phaser.Scene {
         volume: 0.2,
       }),
       crash: this.sound.add('crash', {
-        volume: 0.2,
+        volume: 0.1,
       }),
       coin: this.sound.add('coin', {
         volume: 0.2,
+      }),
+      domino: this.sound.add('domino', {
+        volume: 1, detune: 1000
+      }),
+      hit: this.sound.add('hit', {
+        volume: 2, detune: 500
+      }),
+      jingle: this.sound.add('jingle', {
+        volume: 0.2, detune: 0
       }),
     }
   }
@@ -418,11 +431,13 @@ export default class GameScene extends Phaser.Scene {
     if (this.currentAutoSetting.rounds > 0) this.quickMode = true
     else this.quickMode = false
 
-    let countDown = 6
+    let countDown = 6 // 6
     if (this.quickMode) countDown = 4
 
+    countDown = 4 // dev
+
     let roundPrepareDelay = countDown * 1000 - 4000
-    let roundStartDelay = 4
+    let roundStartDelay = 9
 
     let text = ''
     // countDown
@@ -463,12 +478,14 @@ export default class GameScene extends Phaser.Scene {
     })
   }
   roundPrepare(roundStartDelay) {
+    // console.log('roundPrepare', roundStartDelay)
     this.events.emit('gameEvent', {
       mode: 'ROUND_PREPARE',
     })
 
     this.time.addEvent({
-      delay: this.duration * (this.platforms.hiddingCount + roundStartDelay),
+      // delay: this.duration * (this.platforms.hiddingCount + roundStartDelay),
+      delay: this.duration * roundStartDelay,
       callback: () => {
         this.initCrashIndex() // хранить на сервере, запрашивать isCrash каждое касание (за 100 мс)
         console.log('crashIndex', this.crashIndex)
@@ -527,7 +544,10 @@ export default class GameScene extends Phaser.Scene {
       // dev
       // if (multiplier >= this.smallShakeX && multiplier < this.medShakeX)
       //   this.cameras.main.shake(100, 0.002)
-      if (multiplier >= this.medShakeX) this.cameras.main.shake(100, 0.002)
+      // if (multiplier >= this.medShakeX) this.cameras.main.shake(100, 0.002)
+
+      //
+      this.sounds.hit.play()
     }
   }
   finish() {
@@ -631,24 +651,29 @@ export default class GameScene extends Phaser.Scene {
     // console.log('ratio', ratio)
 
     const RTP = 1 - this.houseEdge / 100
+    const houseEdge = .05
 
     let acc = 0
 
     const crashTable = []
 
     for (let i = 0; i < crashSetting.steps; i++) {
-      let multiplier, base
+      let multiplier, base, real_multyplier
       if (i === 0) {
         multiplier = 1
+        real_multyplier = 1
         base = 0
       } else {
         multiplier = crashSetting.minPayout * Math.pow(ratio, i - 1)
         base = RTP / multiplier
+        real_multyplier = multiplier
+        if (i !== crashSetting.steps - 1 && i !== 1) real_multyplier *= (1 - houseEdge)
       }
 
       crashTable.push({
         step: i,
         multiplier,
+        real_multyplier,
         probability: undefined,
         acc: undefined,
         base,
@@ -721,7 +746,7 @@ export default class GameScene extends Phaser.Scene {
   }
   initCrashIndex_local() {
     let random = Math.random()
-    // random = 0.999 // dev
+    // random = 0.999999999 // dev
     let multiplier = null
     let index = 0
     let acc = 0
