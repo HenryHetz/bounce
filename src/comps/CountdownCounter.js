@@ -2,7 +2,7 @@ export class CountdownCounter {
   constructor(scene) {
     this.scene = scene
     this.x = this.scene.sceneCenterX
-    this.y = 480 // 600
+    this.y = 400 // 600
 
     this.label = scene.add
       .text(this.x, this.y, '', {

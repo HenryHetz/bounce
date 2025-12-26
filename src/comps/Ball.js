@@ -6,7 +6,7 @@ export class Ball {
     this.y = 160 + this.diameter / 2 // this.scene.ballY + this.diameter / 2
 
     this.color = this.scene.standartColors.red // красный цвет
-    this.distanceY = 290 // scene.distanceY 
+    this.distanceY = this.scene.baseDistanceY + 5 // scene.distanceY 
     this.gridUnit = scene.gridUnit
     this.duration = scene.duration
     this.emitter = emitter

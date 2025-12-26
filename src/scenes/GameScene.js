@@ -48,7 +48,8 @@ export default class GameScene extends Phaser.Scene {
     this.ballX = 320
     this.ballY = 160
     this.platformY = this.gridUnit * 6.5
-    this.distanceY = 290 + 60 // this.platformY - this.ballY
+    this.baseDistanceY = 230
+    this.distanceY = this.baseDistanceY + 60 // this.platformY - this.ballY
     this.buttonY = 11.5 * this.gridUnit
     this.buttonNameSpacing = 60
     this.buttonIndent = 110
@@ -248,7 +249,7 @@ export default class GameScene extends Phaser.Scene {
     this.setCashOutAllowed(false)
 
     this.hasCashOut = true
-    // this.sounds.cashout.play()
+    this.sounds.cashout.play()
     // если выход после 0, то нужно что-то менять...
     if (this.stakeValue <= 0) {
       // что-то странное
@@ -552,7 +553,7 @@ export default class GameScene extends Phaser.Scene {
   }
   finish() {
     // console.log('this.cashOutAllowed', this.cashOutAllowed)
-    // this.sounds.crash.play()
+    this.sounds.crash.play()
     this.setCashOutAllowed(false)
 
     this.time.addEvent({
@@ -746,7 +747,7 @@ export default class GameScene extends Phaser.Scene {
   }
   initCrashIndex_local() {
     let random = Math.random()
-    // random = 0.999999999 // dev
+    random = 0.999999999 // dev
     let multiplier = null
     let index = 0
     let acc = 0

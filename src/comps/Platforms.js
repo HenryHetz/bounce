@@ -14,8 +14,8 @@ export class Platforms {
 
         this.touchPointY = this.ballY + this.distanceY
 
-        this.groupTotalHeight = 180
-        this.blockWidth = 140
+        this.groupTotalHeight = 470 - this.scene.baseDistanceY
+        this.blockWidth = 180
 
         this.crashTable = []
         this.lastKnownStep = 0 // индекс шага для рендера чисел (count из событий)
@@ -70,17 +70,17 @@ export class Platforms {
     handleEvent(data) {
         if (data.mode === 'RISK_SETTING_CHANGED') {
             this.crashTable = data.crashTable || []
-            this.lastKnownStep = 0
+            // this.lastKnownStep = 0
 
-            if (!this.currentPattern) this.startSet()
-            this.renderMultipliers(0)
+            // if (!this.currentPattern) this.startSet()
+            // this.renderMultipliers(0)
             return
         }
 
         if (data.mode === 'ROUND_PREPARE') {
             this.resetVisuals()
             this.lastKnownStep = 0
-            if (!this.currentPattern) this.startSet()
+            this.startSet()
             this.renderMultipliers(0)
             return
         }
@@ -100,6 +100,7 @@ export class Platforms {
 
         if (data.mode === 'FINISH') {
             this.setRedTop()
+
             return
         }
     }
@@ -151,7 +152,7 @@ export class Platforms {
 
     startSet() {
         // стартовый паттерн: любой, но не одиночный
-        const startCandidates = this.compiledMap.list.filter((p) => p.blocks === 4)
+        const startCandidates = this.compiledMap.list.filter((p) => p.blocks === 6)
         const start = this.weightedPick(startCandidates)
         this.applyPattern(start, { immediate: true })
     }
@@ -297,12 +298,12 @@ export class Platforms {
 
     pickNextPattern(prevId) {
         let amount = 4
-        if (this.lastKnownMulty >= 10) amount = 3
-        if (this.lastKnownMulty >= 100) amount = 2
+        if (this.lastKnownMulty >= 2) amount = 3 // 10
+        if (this.lastKnownMulty >= 10) amount = 2 // 100
         if (this.lastKnownStep + 1 === this.crashTable.length - 1) amount = 1 // на последную ставим одиночный
         let candidates = this.compiledMap.list.filter((p) => p.blocks === amount)
 
-        console.log(this.lastKnownMulty, this.lastKnownStep, 'pickNextPattern amount:', amount, this.crashTable.length)
+        // console.log(this.lastKnownMulty, this.lastKnownStep, 'pickNextPattern amount:', amount, this.crashTable.length)
         // console.log('pickNextPattern candidates for amount', amount, ':', candidates)
         // return candidates[0] // dev
 
