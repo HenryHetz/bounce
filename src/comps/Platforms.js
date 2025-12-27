@@ -38,6 +38,42 @@ export class Platforms {
 
         this.compiledMap = this.compileBlockMap(this.blockMap)
 
+        this.multiplierToAmount = () => {
+            let amount = 6
+            if (this.lastKnownMulty >= 2) amount = 4 // 10
+            if (this.lastKnownMulty >= 10) amount = 3 // 100
+            if (this.lastKnownMulty >= 100) amount = 2 // 100
+            if (this.lastKnownStep + 1 === this.crashTable.length - 1) amount = 1 // на последную ставим одиночный
+            return amount
+
+            // лучше считать через multy на последнем блоке
+        }
+
+        this.patternProbabilities = 0.25 // 0.25 норм
+
+        const HE = this.scene.logicCenter.getHouseEdge()
+        const r = 1 - HE / 100
+
+        const zones = {
+            lt2: 1 - r / 2,
+            z2_10: r / 2 - r / 10,
+            z10_100: r / 10 - r / 100,
+            gte100: r / 100
+        }
+
+        const ev = (p) => {
+            // const p = this.patternProbabilities
+            // return (50 * Math.pow(p, 6) + 40 * Math.pow(p, 4) + 9 * Math.pow(p, 3) + 1 * Math.pow(p, 2)) / 100
+            return (
+                zones.lt2 * p ** 6 +
+                zones.z2_10 * p ** 4 +
+                zones.z10_100 * p ** 3 +
+                zones.gte100 * p ** 2
+            )
+        }
+        console.log('Platforms patternProbabilities expected visible blocks:',
+            ev(this.patternProbabilities).toFixed(4), (1 / ev(this.patternProbabilities)).toFixed(0))
+
         // Один сет (одна группа) в точке касания
         this.root = this.scene.add
             .container(this.ballX, this.touchPointY)
@@ -172,7 +208,7 @@ export class Platforms {
             duration: 50,
             onComplete: () => {
                 top.destroy()
-                this.setNextMulty(data.count + 1)
+                // this.setNextMulty(data.count + 1)
                 // 4) выбираем новый паттерн (transitions позже)
                 // const next = this.pickNextPattern(this.currentPatternId)
                 // // const next = this.currentPattern // dev
@@ -208,9 +244,6 @@ export class Platforms {
             },
             onComplete: () => {
                 this.setContainer.y = 0
-                const detune = 1800 + Phaser.Math.Between(0, 400) // data.count * 10
-                this.scene.sounds.domino.play({ detune: detune })
-                // console.log(data.count, 'domino.play', detune)
                 // а нужен переход, анимация между двумя состояниями
                 // 4) выбираем новый паттерн (transitions позже)
                 const next = this.pickNextPattern() // this.currentPatternId
@@ -219,6 +252,10 @@ export class Platforms {
                 // 5) восстанавливаем сет и перерисовываем числа, начиная со следующего шага
                 this.applyPattern(next, { immediate: true })
                 this.renderMultipliers(data.count + 1)
+
+                const detune = 1800 + Phaser.Math.Between(0, 400) // data.count * 10
+                this.scene.sounds.domino.play({ detune: detune })
+                // console.log(data.count, 'domino.play', detune)
             },
         })
     }
@@ -229,6 +266,7 @@ export class Platforms {
         this.setContainer.removeAll(true)
         this.blocks = []
 
+        let bonus = 0
         let y = 0
         for (let i = 0; i < patternObj.blocks; i++) {
             const h = patternObj.heightsPx[i]
@@ -237,14 +275,22 @@ export class Platforms {
             y += h
             this.setContainer.add(block)
             this.blocks.push(block)
+            //dev
+            if (block.__pattern.alpha > 0) {
+                bonus += 1
+            }
         }
-
-        // tail только у нижнего
-        // if (this.blocks.length) {
-        //     const last = this.blocks[this.blocks.length - 1]
-        //     last.__tail.setVisible(true)
-        //     last.__tail.y = last.__height
-        // }
+        if (bonus === patternObj.blocks) {
+            // это нужно проверять из сцены? 
+            const hasCashOut = this.scene.logicCenter.getHasCashout()
+            if (!hasCashOut) {
+                this.scene.sounds.jingle.play()
+                console.log('BONUS achieved! All patterns visible!')
+            } else {
+                console.log('BONUS skipped due to cashout')
+            }
+        }
+        // if (bonus > 0) this.scene.sounds.puck.play({})
 
         if (immediate) {
             this.root.x = this.ballX
@@ -256,18 +302,18 @@ export class Platforms {
     // -----------------------
     // Rendering multipliers
     // -----------------------
-    setNextMulty(step) {
-        let text = ''
-        const table = this.crashTable
-        const row = table[step]
-        // console.log('setNextMulty step:', step, 'row:', row)
+    // setNextMulty(step) {
+    //     let text = ''
+    //     const table = this.crashTable
+    //     const row = table[step]
+    //     // console.log('setNextMulty step:', step, 'row:', row)
 
-        const m = row.multiplier
-        text = m >= 1000 ? m.toFixed(0) : m >= 100 ? m.toFixed(1) : m.toFixed(2)
-        this.scene.countdownCounter.show(1)
+    //     const m = row.multiplier
+    //     text = m >= 1000 ? m.toFixed(0) : m >= 100 ? m.toFixed(1) : m.toFixed(2)
+    //     this.scene.countdownCounter.show(1)
 
-        this.scene.countdownCounter.set(text)
-    }
+    //     this.scene.countdownCounter.set(text)
+    // }
     renderMultipliers(startStep) {
         // startStep = какой индекс crashTable показываем на верхнем блоке
         const table = this.crashTable
@@ -297,10 +343,12 @@ export class Platforms {
     // -----------------------
 
     pickNextPattern(prevId) {
-        let amount = 4
-        if (this.lastKnownMulty >= 2) amount = 3 // 10
-        if (this.lastKnownMulty >= 10) amount = 2 // 100
-        if (this.lastKnownStep + 1 === this.crashTable.length - 1) amount = 1 // на последную ставим одиночный
+        // let amount = 4
+        // if (this.lastKnownMulty >= 2) amount = 3 // 10
+        // if (this.lastKnownMulty >= 10) amount = 2 // 100
+        // if (this.lastKnownStep + 1 === this.crashTable.length - 1) amount = 1 // на последную ставим одиночный
+
+        const amount = this.multiplierToAmount()
         let candidates = this.compiledMap.list.filter((p) => p.blocks === amount)
 
         // console.log(this.lastKnownMulty, this.lastKnownStep, 'pickNextPattern amount:', amount, this.crashTable.length)
@@ -405,36 +453,28 @@ export class Platforms {
             })
             .setOrigin(0.5, 0.5)
 
-        // const pattern = scene.add.image(-this.blockWidth / 2, 0, 'pattern').setOrigin(0, 0);
-        // pattern.setAlpha(0.8);
-
-        // 2) Маска в тех же локальных координатах блока
-        // const mg = scene.add.graphics();
-        // mg.fillStyle(0xffffff, 0.5);
-        // mg.fillRect(-this.blockWidth / 2, 0, this.blockWidth, heightPx);
-        // mg.setVisible(1);
-
-        // const mask = mg.createGeometryMask();
-        // pattern.setMask(mask);
+        const patternRandom = Phaser.Math.FloatBetween(0, 1)
+        const patternVisible = patternRandom < this.patternProbabilities
+        const patternIndent = 6
 
         const pattern = scene.add.tileSprite(
             0,
             heightPx / 2,
-            this.blockWidth - strokeWidth * 2,
-            heightPx - strokeWidth * 2,
+            this.blockWidth - patternIndent * 2,
+            heightPx - patternIndent * 2,
             'pattern'
-        ).setOrigin(0.5).setAlpha(index == 2 ? 0.5 : 0)
+        ).setOrigin(0.5).setAlpha(patternVisible ? 0.5 : 0)
 
-        const unit = scene.add.container(0, 0, [rect, pattern, text])
-        // unit.setMask(mask);
+        const block = scene.add.container(0, 0, [rect, pattern, text])
+        // block.setMask(mask);
 
-        unit.__rect = rect
-        unit.__text = text
-        // unit.__maskRect = maskRect
-        unit.__pattern = pattern
-        unit.__height = heightPx
-        unit.alpha = 1
-        return unit
+        block.__rect = rect
+        block.__text = text
+        // block.__maskRect = maskRect
+        block.__pattern = pattern
+        block.__height = heightPx
+        block.alpha = 1
+        return block
     }
 
     setRedTop() {

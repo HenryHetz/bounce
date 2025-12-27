@@ -30,27 +30,32 @@ export default class GameScene extends Phaser.Scene {
   }
   preload() { }
   init() {
+    this.paused = true;
     // dev - prod
     this.isDev = true
-    this.houseEdge = 0.00 // его не должно быть в локале!
-
-    this.elapsedSec = 0;
+    this.tweens.timeScale = 2
+    this.houseEdge = 1.00 // его не должно быть в локале!
 
     // GAME STATE
     this.isCrashed = false
     this.roundCounter = 0
     this.bounceCount = 0
-    this.quickMode = DEFAULT_GAME_CONFIG.quickMode
+    this.quickMode = DEFAULT_GAME_CONFIG.quickMode // это должно ускорять анимации
+    this.elapsedSec = 0
+    this.roundTime = []
 
     // DIMENSIONS
     this.gridUnit = 80
     this.sceneCenterX = this.cameras.main.centerX
     this.ballX = 320
     this.ballY = 160
-    this.platformY = this.gridUnit * 6.5
+    this.hitPointY = 450
+    // изменить калькуляцию!!!
     this.baseDistanceY = 230
-    this.distanceY = this.baseDistanceY + 60 // this.platformY - this.ballY
+    this.distanceY = this.baseDistanceY + 60
     this.buttonY = 11.5 * this.gridUnit
+
+    // UI SETTINGS
     this.buttonNameSpacing = 60
     this.buttonIndent = 110
     this.labelColor = '#13469A'
@@ -79,7 +84,6 @@ export default class GameScene extends Phaser.Scene {
     this.currentAutoSetting = { ...DEFAULT_AUTOBET_SETTING }
 
     // TWEENS (DEV)
-    this.tweens.timeScale = 1
     this.rnd = Phaser.Math.RND
     this.smallShakeX = 5
     this.medShakeX = 20
@@ -113,16 +117,29 @@ export default class GameScene extends Phaser.Scene {
     }
   }
   create() {
+    // создать центр логики, из которого будут брать данные все компоненты
+    this.logicCenter = {
+      getCurrentRiskSetting: () => this.currentRiskSetting,
+      getCurrentAutoSetting: () => this.currentAutoSetting,
+      getCrashTable: () => this.crashTable,
+      getCurrentStep: () => this.bounceCount,
+      getHasCashout: () => this.hasCashOut,
+      getHouseEdge: () => this.houseEdge,
+      // приватные методы
+      // _set
+    }
+
     this.background = new Background(this)
     // dev
-    this.fpsText = this.add.text(20, 1100, '', {
+    this.fpsCounter = this.add.text(20, 1100, '', {
       font: '16px monospace',
       fill: this.textColors.white,
-    })
-    // this.fpsText = this.add.text(50, 120, 'FPS: ', {
-    //         font: smallFont,
-    //         fill: this.textColors.white
-    //     }).setDepth(100);
+    }).setDepth(100);
+
+    this.timeCounter = this.add.text(620, 1100, '0.00', {
+      font: '16px monospace',
+      fill: this.textColors.white,
+    }).setDepth(100).setAlign('right').setOrigin(1, 0);
 
 
     // this.demoText = this.add
@@ -341,6 +358,9 @@ export default class GameScene extends Phaser.Scene {
       jingle: this.sound.add('jingle', {
         volume: 0.2, detune: 0
       }),
+      puck: this.sound.add('puck', {
+        volume: 0.2, detune: 0
+      }),
     }
   }
   createParticles() {
@@ -370,17 +390,13 @@ export default class GameScene extends Phaser.Scene {
     canvas.refresh()
   }
   update(time, deltaMs) {
-    // из гонки
-    if (this.paused) return; // нужно и в паузу бежать дорогу?
-    // const dt = Math.min(deltaMs, 32) / 1000; // кламп дельты
+    this.fpsCounter.setText(`FPS: ${this.game.loop.actualFps.toFixed(0)}`);
+
+    if (this.paused) return; //
     const dt = Math.min(deltaMs / 1000, 0.05);
     this.elapsedSec += dt;
-    // this.timeCounter.setText(this.elapsedSec.toFixed(2));
-    this.fpsText.setText(`FPS: ${this.game.loop.actualFps.toFixed(0)}`);
-
-    const timeNow = new Date().getTime();
-
-    // дальше коррекция 
+    this.timeCounter.setText(this.elapsedSec.toFixed(2));
+    // const timeNow = new Date().getTime();
   }
 
   // FSM setup
@@ -430,15 +446,15 @@ export default class GameScene extends Phaser.Scene {
 
     // if (this.pendingAutoSetting) this.handleAutoSetting(this.pendingAutoSetting)
     if (this.currentAutoSetting.rounds > 0) this.quickMode = true
-    else this.quickMode = false
+    else this.quickMode = false // можно флаг менять в настройках
 
-    let countDown = 6 // 6
-    if (this.quickMode) countDown = 4
+    let countDown = 4 // стандарт
+    if (this.quickMode) countDown = 1 // можно при currentAutoSetting делать старт после GO?
+    // не выбирать ставку в авто режиме? Как в слотах
+    // у меня логика такая: краш это не слот, здесь можно играть ставкой в паузах
 
-    countDown = 4 // dev
-
-    let roundPrepareDelay = countDown * 1000 - 4000
-    let roundStartDelay = 9
+    // let roundPrepareDelay = countDown * 1000 - 4000
+    let roundStartDelay = this.duration * (countDown * 2 + 0.5)
 
     let text = ''
     // countDown
@@ -446,13 +462,13 @@ export default class GameScene extends Phaser.Scene {
       delay: 1000,
       callback: () => {
         countDown--
-        text = countDown.toString()
+        text = countDown.toFixed(0).toString()
 
         if (countDown === 0) {
           text = 'GO!'
           // спрятать GO
           this.time.addEvent({
-            delay: 500,
+            delay: 300,
             callback: () => {
               this.events.emit('gameEvent', {
                 mode: 'COUNTDOWN_UPDATE',
@@ -472,7 +488,7 @@ export default class GameScene extends Phaser.Scene {
     })
     // round start after...
     this.time.addEvent({
-      delay: roundPrepareDelay,
+      // delay: roundPrepareDelay,
       callback: () => {
         this.roundPrepare(roundStartDelay)
       },
@@ -486,7 +502,7 @@ export default class GameScene extends Phaser.Scene {
 
     this.time.addEvent({
       // delay: this.duration * (this.platforms.hiddingCount + roundStartDelay),
-      delay: this.duration * roundStartDelay,
+      delay: roundStartDelay, // this.duration * roundStartDelay
       callback: () => {
         this.initCrashIndex() // хранить на сервере, запрашивать isCrash каждое касание (за 100 мс)
         console.log('crashIndex', this.crashIndex)
@@ -495,6 +511,7 @@ export default class GameScene extends Phaser.Scene {
         this.roundCounter++
 
         this.elapsedSec = 0;
+        this.timeCounter.setText(this.elapsedSec.toFixed(2));
 
         // if (this.pendingAutoSetting)
         //   this.handleAutoSetting(this.pendingAutoSetting)
@@ -516,6 +533,7 @@ export default class GameScene extends Phaser.Scene {
     // console.timeEnd('Time to betting')
     // console.time('Round time')
     // console.log('round', this.stakeValue)
+    this.paused = false;
   }
   bounceHandler() {
     // console.log('bounceHandler')
@@ -553,16 +571,22 @@ export default class GameScene extends Phaser.Scene {
   }
   finish() {
     // console.log('this.cashOutAllowed', this.cashOutAllowed)
+    this.paused = true;
     this.sounds.crash.play()
     this.setCashOutAllowed(false)
 
     this.time.addEvent({
-      delay: 2000,
+      delay: 1000,
       callback: () => {
         // console.timeEnd('Round time')
         this.fsm.toCountdown()
       },
     })
+
+    // dev
+    this.roundTime.push(this.elapsedSec);
+    const avgTime = this.roundTime.reduce((acc, val) => acc + val, 0) / this.roundTime.length;
+    console.log('Rounds:', this.roundTime.length, 'Average Round Time:', avgTime.toFixed(2), 'seconds');
   }
 
   // вспомогательные методы
@@ -747,7 +771,7 @@ export default class GameScene extends Phaser.Scene {
   }
   initCrashIndex_local() {
     let random = Math.random()
-    random = 0.999999999 // dev
+    // random = 0.999999999 // dev - а что когда 1 или выше??
     let multiplier = null
     let index = 0
     let acc = 0

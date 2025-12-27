@@ -4,15 +4,17 @@ export class Ball {
     this.diameter = 110
     this.x = 320 // this.scene.ballX
     this.y = 160 + this.diameter / 2 // this.scene.ballY + this.diameter / 2
+    this.hitPointY = this.scene.hitPointY // точка удара - и достаточно!
+    this.distanceY = this.hitPointY - this.y // scene.distanceY 
 
-    this.color = this.scene.standartColors.red // красный цвет
-    this.distanceY = this.scene.baseDistanceY + 5 // scene.distanceY 
-    this.gridUnit = scene.gridUnit
+    this.fujiY = 320 + this.diameter / 2
+
     this.duration = scene.duration
     this.emitter = emitter
     this.bounceHandler = bounceHandler
     this.depth = 10
 
+    this.color = this.scene.standartColors.red // красный цвет
     // this.ball = scene.add
     //   .image(this.x, this.y, 'ball')
     //   .setOrigin(0.5, 1)
@@ -117,25 +119,26 @@ export class Ball {
     }
   }
   reset() {
-    this.clearTint()
-    this.ball.y = this.y
+    // this.clearTint()
+    // this.ball.y = this.y
     this.scene.tweens.add({
       targets: this.ball,
+      y: this.y,
       alpha: 1,
-      duration: 3000,
+      duration: 1000,
     })
   }
   up() {
     this.scene.tweens.add({
       targets: this.ball,
-      delay: 10,
+      delay: 0,
       alpha: 0,
       duration: 0,
       onComplete: () => {
         this.scene.tweens.add({
           targets: this.ball,
-          delay: 1000,
-          y: this.y,
+          delay: 100,
+          y: this.fujiY, // уходит в фуджи
           duration: 0,
         })
       },

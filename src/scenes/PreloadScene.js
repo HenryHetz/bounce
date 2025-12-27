@@ -12,6 +12,7 @@ export default class PreloadScene extends Phaser.Scene {
     // const loadingBar = new LoadingBar(this);
     this.preloadAssets()
 
+    // так шрифты гарантировано не загружаются
     const fontsToLoad = [
       new FontFace('walibi', 'url(assets/fonts/walibi.ttf)'),
       new FontFace(
@@ -144,6 +145,7 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.audio('domino', 'assets/sounds/domino_2.mp3')
     this.load.audio('hit', 'assets/sounds/hit.mp3')
     this.load.audio('jingle', 'assets/sounds/jingle.mp3')
+    this.load.audio('puck', 'assets/sounds/puck_down.mp3')
 
     // particles
     this.load.image('yellow', 'assets/sprites/particles/yellow.png')

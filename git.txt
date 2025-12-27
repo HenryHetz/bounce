@@ -1,9 +1,6 @@
-git add -A
-git commit -m "update" || echo "no changes"
-git push
-// git push origin main:gh-pages --force
-
 
 git add -A
 git commit -m "wip"
 git push
+
+npm run deploy
