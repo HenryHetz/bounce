@@ -34,7 +34,7 @@ export default class GameScene extends Phaser.Scene {
     // dev - prod
     this.isDev = true
     this.tweens.timeScale = 1
-    this.houseEdge = 1.00 // его не должно быть в локале!
+    this.houseEdge = 3.00 // его не должно быть в локале!
 
     // GAME STATE
     this.isCrashed = false
@@ -113,7 +113,8 @@ export default class GameScene extends Phaser.Scene {
     // UI SETTINGS
     this.buttonNameSpacing = 60
     this.buttonIndent = 110
-    this.labelColor = this.textColors.black
+    this.labelColor = this.textColors.white
+    this.labelFont = '14px AvenirBlack'
     this.duration = 500 // это не duration, а половина цикла
   }
   create() {
@@ -122,6 +123,7 @@ export default class GameScene extends Phaser.Scene {
       getCurrentRiskSetting: () => this.currentRiskSetting,
       getCurrentAutoSetting: () => this.currentAutoSetting,
       getCrashTable: () => this.crashTable,
+      getCrashIndex: () => this.crashIndex,
       getCurrentStep: () => this.bounceCount,
       getHasCashout: () => this.hasCashOut,
       getHouseEdge: () => this.houseEdge,
@@ -436,6 +438,8 @@ export default class GameScene extends Phaser.Scene {
           this.finish()
           break
       }
+      // нужен: краш, кэш-аут, взятие последней плашки - фанфары
+      // бонус: вход, игра, выход, добавление бонуса по ходу
     })
   }
   // round machine
@@ -578,7 +582,7 @@ export default class GameScene extends Phaser.Scene {
   finish() {
     // console.log('this.cashOutAllowed', this.cashOutAllowed)
     this.paused = true;
-    this.sounds.crash.play()
+    // this.sounds.crash.play()
     this.setCashOutAllowed(false)
 
     this.time.addEvent({
@@ -672,14 +676,14 @@ export default class GameScene extends Phaser.Scene {
       crashTable: this.crashTable,
     })
   }
-  generateCrashTable(crashSetting) {
+  generateCrashTable(crashSetting) { // old
     // console.log('generateCrashTable', crashSetting, this.houseEdge)
 
     const ratio = Math.pow(
       crashSetting.maxPayout / crashSetting.minPayout,
       1 / (crashSetting.steps - 2)
     )
-    // console.log('ratio', ratio)
+    console.log('ratio', ratio)
 
     const RTP = 1 - this.houseEdge / 100
     const houseEdge = .05
@@ -723,9 +727,71 @@ export default class GameScene extends Phaser.Scene {
       if (i === 0) crashTable[i].probability = 1 - acc
     }
 
-    // console.table(crashTable)
+    console.table(crashTable)
     // dev
-    // this.checkMath(crashTable)
+    this.checkMath(crashTable)
+
+    // dev
+    // this.generateCrashTable_(crashSetting)
+    return crashTable
+  }
+  _generateCrashTable(crashSetting) { // new
+    console.log('generateCrashTable', crashSetting, this.houseEdge)
+
+    const ratio = Math.pow(
+      crashSetting.maxPayout / crashSetting.minPayout,
+      1 / (crashSetting.steps - 1)
+    )
+    console.log('ratio', ratio)
+
+    const RTP = 1 - this.houseEdge / 100
+    const houseEdge = .05
+
+    let acc = 0
+
+    const crashTable = []
+
+    for (let i = 1; i <= crashSetting.steps; i++) {
+      let multiplier, base, real_multyplier
+      // if (i === 0) {
+      //   multiplier = 1
+      //   real_multyplier = 1
+      //   base = 0
+      // } else {
+      multiplier = crashSetting.minPayout * Math.pow(ratio, i - 1)
+      base = RTP / multiplier
+
+      // dev
+      // real_multyplier = multiplier
+      // if (i !== crashSetting.steps - 1 && i !== 1) real_multyplier *= (1 - houseEdge)
+      // }
+
+      crashTable.push({
+        step: i,
+        multiplier,
+        // real_multyplier,
+        probability: undefined,
+        acc: undefined,
+        base,
+      })
+    }
+    console.table(crashTable)
+
+    for (let i = crashTable.length - 1; i >= 0; i--) {
+      // console.log(i, 'обратка', i, crashTable[i].multiplier)
+      if (i < crashTable.length - 1 && i !== 0) {
+        crashTable[i].probability = crashTable[i].base - crashTable[i + 1].base
+      } else {
+        crashTable[i].probability = crashTable[i].base
+      }
+      crashTable[i].acc = 1 - acc
+      acc += crashTable[i].probability
+      if (i === 0) crashTable[i].probability = 1 - acc
+    }
+
+    console.table(crashTable)
+    // dev
+    this.checkMath(crashTable)
     return crashTable
   }
   checkMath(crashTable) {
@@ -775,9 +841,10 @@ export default class GameScene extends Phaser.Scene {
     console.table(result)
     console.log('ave RTP', RTP / (crashTable.length - 1))
   }
-  initCrashIndex_local() {
+  initCrashIndex_local() { // old
     let random = Math.random()
     // random = 0.999999999 // dev - а что когда 1 или выше??
+    console.log('random', random)
     let multiplier = null
     let index = 0
     let acc = 0
@@ -862,3 +929,86 @@ export default class GameScene extends Phaser.Scene {
   }
 
 }
+
+/**
+generateCrashTable(crashSetting) {
+    // console.log('generateCrashTable', crashSetting, this.houseEdge)
+
+    const ratio = Math.pow(
+      crashSetting.maxPayout / crashSetting.minPayout,
+      1 / (crashSetting.steps - 2)
+    )
+    // console.log('ratio', ratio)
+
+    const RTP = 1 - this.houseEdge / 100
+    const houseEdge = .05
+
+    let acc = 0
+
+    const crashTable = []
+
+    for (let i = 0; i < crashSetting.steps; i++) {
+      let multiplier, base, real_multyplier
+      if (i === 0) {
+        multiplier = 1
+        real_multyplier = 1
+        base = 0
+      } else {
+        multiplier = crashSetting.minPayout * Math.pow(ratio, i - 1)
+        base = RTP / multiplier
+        real_multyplier = multiplier
+        if (i !== crashSetting.steps - 1 && i !== 1) real_multyplier *= (1 - houseEdge)
+      }
+
+      crashTable.push({
+        step: i,
+        multiplier,
+        real_multyplier,
+        probability: undefined,
+        acc: undefined,
+        base,
+      })
+    }
+
+    for (let i = crashTable.length - 1; i >= 0; i--) {
+      // console.log(i, 'обратка', i, crashTable[i].multiplier)
+      if (i < crashTable.length - 1 && i !== 0) {
+        crashTable[i].probability = crashTable[i].base - crashTable[i + 1].base
+      } else {
+        crashTable[i].probability = crashTable[i].base
+      }
+      crashTable[i].acc = 1 - acc
+      acc += crashTable[i].probability
+      if (i === 0) crashTable[i].probability = 1 - acc
+    }
+
+    // console.table(crashTable)
+    // dev
+    // this.checkMath(crashTable)
+    return crashTable
+  }
+
+  initCrashIndex_local_() { // new
+    let random = Math.random()
+    console.log('random', random)
+    // random = 0.999999999 // dev - а что когда 1 или выше??
+    let multiplier = null
+    let index = 0
+    let acc = 0
+    function getCrashIndex(crashTable) {
+      for (let i = 0; i < crashTable.length; i++) {
+        // acc += crashTable[i].probability
+        if (random < crashTable[i].acc) {
+          acc = crashTable[i].acc
+          multiplier = crashTable[i].multiplier
+          index = i
+          return i
+        }
+      }
+    }
+    this.crashIndex = getCrashIndex(this.crashTable) // следующий будет краш!
+    // this.crashIndex > 0 ? (this.crashIndex += 1) : 0
+
+    return this.crashIndex
+  }
+ */

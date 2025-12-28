@@ -23,6 +23,7 @@ export class GameControlPanel {
     const indent = this.scene.buttonIndent
     const nameSpacing = this.scene.buttonNameSpacing
     const labelColor = this.scene.labelColor
+    const labelFont = this.scene.labelFont
 
     // StakeCounter
     this.stakeCounterShadow = this.scene.add
@@ -120,18 +121,20 @@ export class GameControlPanel {
 
     // Tuner Button
     this.buttonTuner = this.scene.add
-      .image(this.centerX * 2 - indent, buttonY, 'button_tuner')
+      .image(640 - 60, buttonY - 130, 'button_tuner')
       .setOrigin(0.5)
-      .setScale(0.8)
-      .setAlpha(0.01) // dev
+      .setScale(1)
+      .setAlpha(1) // dev
       .setInteractive()
       .on('pointerdown', () => this.onTuner?.())
 
     this.tunerLabel = this.scene.add
-      .text(this.buttonTuner.x, this.buttonTuner.y - nameSpacing, 'TUNER', {
-        fontFamily: 'AvenirNextCondensedBold',
-        fontSize: '18px',
+      .text(this.buttonTuner.x, this.buttonTuner.y - 50, 'TUNER', {
+        // fontFamily: 'AvenirNextCondensedBold',
+        // fontSize: '18px',
+        // color: labelColor,
         color: labelColor,
+        font: labelFont
       })
       .setOrigin(0.5, 0)
 
@@ -146,9 +149,10 @@ export class GameControlPanel {
     this.settingsLabel = this.scene.add
       .text(this.buttonSettings.x, this.buttonSettings.y - 50, 'SETTINGS', {
         color: labelColor,
-        fontSize: '14px',
+        font: labelFont
+        // fontSize: '14px',
         // color: this.scene.textColors.white,
-        fontFamily: 'AvenirBlack',
+        // fontFamily: 'AvenirBlack',
       })
       .setOrigin(0.5, 0)
 

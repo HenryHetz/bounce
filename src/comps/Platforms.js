@@ -39,15 +39,21 @@ export class Platforms {
         this.compiledMap = this.compileBlockMap(this.blockMap)
 
         this.multiplierToAmount = () => {
-            let amount = 6
-            if (this.lastKnownMulty >= 2) amount = 4 // 10
-            if (this.lastKnownMulty >= 10) amount = 3 // 100
-            if (this.lastKnownMulty >= 100) amount = 2 // 100
-            if (this.lastKnownStep + 1 === this.crashTable.length - 1) amount = 1 // на последную ставим одиночный
-            return amount
+            const stepLeft = this.crashTable.length - 1 - this.lastKnownStep
+            if (stepLeft <= 0) return 1
 
-            // лучше считать через multy на последнем блоке
+            let amount = 6
+            if (this.lastKnownMulty >= 2) amount = 4
+            if (this.lastKnownMulty >= 10) amount = 3
+            if (this.lastKnownMulty >= 100) amount = 2
+
+            // ближайшее меньшее (или равное) из 6-4-3-2-1
+            const STEPS = [6, 4, 3, 2, 1]
+            amount = STEPS.find(v => v <= Math.min(amount, stepLeft)) ?? 1
+
+            return amount
         }
+
 
         this.patternProbabilities = 0.25 // 0.25 норм
 
@@ -133,9 +139,16 @@ export class Platforms {
             // this.scene.countdownCounter.show(1)
             return
         }
+        if (data.mode === 'CASHOUT') {
+            // нужно красить красным блок на котором краш
+            // а если он далеко - показывать номер справа
+            // или выводить эти блоки... ?
+            this.showCrashBlock(data)
+            return
+        }
 
         if (data.mode === 'FINISH') {
-            this.setRedTop()
+            this.setRedTop(0)
 
             return
         }
@@ -195,7 +208,7 @@ export class Platforms {
 
     onBounce(data) {
         if (!this.blocks.length) return
-        // console.log('onBounce:', data.count)
+        // console.log(data.count, 'onBounce:', data)
         const top = this.blocks[0]
         const removedH = top.__height
 
@@ -338,7 +351,7 @@ export class Platforms {
             // формат как у тебя в других местах
             let text = m >= 1000 ? m.toFixed(0) : m >= 100 ? m.toFixed(1) : m.toFixed(2)
             // text = 'X_' + text
-            if (m === 1) text = '...' // особый случай для единицы
+            // if (m === 1) text = '...' // особый случай для единицы
             b.__text.setText(text)
         }
     }
@@ -437,7 +450,7 @@ export class Platforms {
 
         // параметры стиля
         const strokeWidth = 4
-        const strokeColor = isBonus ? this.scene.standartColors.red : this.scene.standartColors.dark_gray
+        const strokeColor = this.scene.standartColors.dark_gray
 
 
         g.__x = -width / 2 + strokeWidth / 2;
@@ -514,13 +527,19 @@ export class Platforms {
         return block
     }
 
-    setRedTop() {
-        const top = this.blocks[0]
+    showCrashBlock(data) {
+        const crashStep = this.scene.logicCenter.getCrashIndex()
+
+        console.log('showCrashBlock crashStep:', crashStep, 'this.lastKnownStep:', this.lastKnownStep)
+    }
+    setRedTop(number) {
+        const top = this.blocks[number || 0];
         if (!top) return
         this.recolorBlockRect(top.__rect, this.scene.standartColors.red);
-        this.recolorBlockFrame(top.__frame, this.scene.standartColors.red);
+        // this.recolorBlockFrame(top.__frame, this.scene.standartColors.red);
         top.__pattern.alpha = 0
     }
+
     recolorBlockRect(g, newColor) {
         g.clear();
         g.fillStyle(newColor, 1);
@@ -529,9 +548,9 @@ export class Platforms {
     }
     recolorBlockFrame(g, newColor) {
         g.clear();
-        g.lineStyle(g.__strokeWidth, newColor, 1)
-        g.strokeRect(g.__x, g.__y, g.__width, g.__height);
-        g.__color = newColor;
+        // g.lineStyle(g.__strokeWidth, newColor, 1)
+        // g.strokeRect(g.__x, g.__y, g.__width, g.__height);
+        // g.__color = newColor;
     }
     resetVisuals() {
         for (const b of this.blocks) {
