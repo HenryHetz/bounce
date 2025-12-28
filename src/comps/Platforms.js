@@ -276,12 +276,17 @@ export class Platforms {
             this.setContainer.add(block)
             this.blocks.push(block)
             //dev
+            // это нужно проверять из сцены, и вообще должно приходить от сервера
+            // но для простоты пусть будет тут
+            // все блоки с паттерном — бонус!
             if (block.__pattern.alpha > 0) {
                 bonus += 1
             }
         }
         if (bonus === patternObj.blocks) {
-            // это нужно проверять из сцены? 
+            // это нужно проверять из сцены, и вообще должно приходить от сервера
+            // но для простоты пусть будет тут
+            // все блоки с паттерном — бонус!
             const hasCashOut = this.scene.logicCenter.getHasCashout()
             if (!hasCashOut) {
                 this.scene.sounds.jingle.play()
@@ -408,38 +413,55 @@ export class Platforms {
     // Blocks visuals
     // -----------------------
     createBlockRect(width, height, index) {
+        const g = this.scene.add.graphics();
+
+        const isWhite = ((index + this.chessPhase) % 2 === 0);
+        const fillColor = isWhite
+            ? this.scene.standartColors.white
+            : this.scene.standartColors.gray;
+
+        g.__width = width;
+        g.__height = height;
+        g.__x = -width / 2;
+        g.__y = 0;
+        g.__color = fillColor;
+
+        g.fillStyle(g.__color, 1);
+        g.fillRect(g.__x, g.__y, g.__width, g.__height);
+
+        return g;
+    }
+
+    createBlockFrame(width, height, index, isBonus = false) {
         const g = this.scene.add.graphics()
 
-        const isWhite = ((index + this.chessPhase) % 2 === 0)
-        // console.log('index:', index, 'chessPhase:', this.chessPhase, 'isWhite:', isWhite,)
         // параметры стиля
         const strokeWidth = 4
-        const strokeColor = this.scene.standartColors.dark_gray
-        const fillColor = isWhite ? this.scene.standartColors.white : this.scene.standartColors.gray
-        const fillAlpha = 1 // прозрачность фона
+        const strokeColor = isBonus ? this.scene.standartColors.red : this.scene.standartColors.dark_gray
 
-        g.lineStyle(strokeWidth, strokeColor, 1)
-        g.fillStyle(fillColor, fillAlpha)
 
-        g.fillRect(-width / 2, 0, width, height)
+        g.__x = -width / 2 + strokeWidth / 2;
+        g.__y = 0 + strokeWidth / 2;
+        g.__width = width - strokeWidth;
+        g.__height = height - strokeWidth;
+        g.__color = strokeColor;
+        g.__strokeWidth = strokeWidth;
 
-        g.strokeRect(
-            -width / 2 + strokeWidth / 2,
-            0 + strokeWidth / 2,
-            width - strokeWidth, // - strokeWidth * 2
-            height - strokeWidth// - strokeWidth * 2
-        )
-
+        g.lineStyle(g.__strokeWidth, strokeColor, 1)
+        g.strokeRect(g.__x, g.__y, g.__width, g.__height);
         return g
     }
 
     createBlock(heightPx, index) {
         const scene = this.scene
+        // нужен прямоугольник
+        // паттерн
+        // рамка - без фона
+        // текст
 
         const strokeWidth = 4
 
         const rect = this.createBlockRect(this.blockWidth, heightPx, index)
-
         const text = scene.add
             .text(0, heightPx * 0.5, '', {
                 fontSize: '20px',
@@ -455,20 +477,35 @@ export class Platforms {
 
         const patternRandom = Phaser.Math.FloatBetween(0, 1)
         const patternVisible = patternRandom < this.patternProbabilities
-        const patternIndent = 6
+        const patternIndent = 0
 
-        const pattern = scene.add.tileSprite(
-            0,
-            heightPx / 2,
-            this.blockWidth - patternIndent * 2,
-            heightPx - patternIndent * 2,
-            'pattern'
-        ).setOrigin(0.5).setAlpha(patternVisible ? 0.5 : 0)
+        let pattern = null
+        if (patternVisible) {
+            pattern = scene.add.tileSprite(
+                0,
+                heightPx / 2,
+                this.blockWidth - patternIndent * 2,
+                heightPx - patternIndent * 2,
+                'pattern'
+            ).setOrigin(0.5).setAlpha(0.5)
+        } else {
+            // если не бонусная картинка, то паттерн из стандартных
+            pattern = scene.add.rectangle(
+                0,
+                heightPx / 2,
+                this.blockWidth - patternIndent * 2,
+                heightPx - patternIndent * 2,
+                0x000000,
+            ).setOrigin(0.5).setAlpha(0)
+        }
 
-        const block = scene.add.container(0, 0, [rect, pattern, text])
+        const frame = this.createBlockFrame(this.blockWidth, heightPx, index)
+
+        const block = scene.add.container(0, 0, [rect, pattern, frame, text])
         // block.setMask(mask);
 
         block.__rect = rect
+        block.__frame = frame
         block.__text = text
         // block.__maskRect = maskRect
         block.__pattern = pattern
@@ -480,11 +517,22 @@ export class Platforms {
     setRedTop() {
         const top = this.blocks[0]
         if (!top) return
-        top.__rect.fillColor = this.scene.standartColors.red
-
-        // top.__tail.setTexture('fadeRedRect')
+        this.recolorBlockRect(top.__rect, this.scene.standartColors.red);
+        this.recolorBlockFrame(top.__frame, this.scene.standartColors.red);
+        top.__pattern.alpha = 0
     }
-
+    recolorBlockRect(g, newColor) {
+        g.clear();
+        g.fillStyle(newColor, 1);
+        g.fillRect(g.__x, g.__y, g.__width, g.__height);
+        g.__color = newColor;
+    }
+    recolorBlockFrame(g, newColor) {
+        g.clear();
+        g.lineStyle(g.__strokeWidth, newColor, 1)
+        g.strokeRect(g.__x, g.__y, g.__width, g.__height);
+        g.__color = newColor;
+    }
     resetVisuals() {
         for (const b of this.blocks) {
             b.alpha = 1

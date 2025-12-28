@@ -11,6 +11,7 @@ export class GameControlPanel {
     this.onCash = config.onCash
     this.onTuner = config.onTuner
     this.onAuto = config.onAuto
+    this.onSettings = config.onSettings
 
     this.createElements()
     this.registerHandlers()
@@ -48,7 +49,6 @@ export class GameControlPanel {
     this.autoCashoutLabel = this.scene.add
       .text(this.stakeCounter.x, this.stakeCounter.y + 40, 'AUTO CASH: 2.11', {
         font: '18px AvenirNextCondensedBold',
-        // color: '#fdd41d',
         color: labelColor,
       })
       .setOrigin(0.5)
@@ -106,6 +106,7 @@ export class GameControlPanel {
       .image(indent, buttonY, 'button_auto_off')
       .setOrigin(0.5)
       .setScale(0.8)
+      .setAlpha(0.01) // dev
       .setInteractive()
       .on('pointerdown', () => this.onAuto?.())
 
@@ -122,6 +123,7 @@ export class GameControlPanel {
       .image(this.centerX * 2 - indent, buttonY, 'button_tuner')
       .setOrigin(0.5)
       .setScale(0.8)
+      .setAlpha(0.01) // dev
       .setInteractive()
       .on('pointerdown', () => this.onTuner?.())
 
@@ -130,6 +132,23 @@ export class GameControlPanel {
         fontFamily: 'AvenirNextCondensedBold',
         fontSize: '18px',
         color: labelColor,
+      })
+      .setOrigin(0.5, 0)
+
+    // Setting Button
+    this.buttonSettings = this.scene.add
+      .image(60, buttonY - 130, 'button_settings')
+      .setOrigin(0.5)
+      .setScale(1)
+      .setInteractive()
+      .on('pointerdown', () => this.onSettings?.())
+
+    this.settingsLabel = this.scene.add
+      .text(this.buttonSettings.x, this.buttonSettings.y - 50, 'SETTINGS', {
+        color: labelColor,
+        fontSize: '14px',
+        // color: this.scene.textColors.white,
+        fontFamily: 'AvenirBlack',
       })
       .setOrigin(0.5, 0)
 

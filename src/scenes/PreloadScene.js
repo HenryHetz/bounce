@@ -117,6 +117,8 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.image('button_tuner', 'assets/sprites/elements/button_tuner.png')
     this.load.image('button_close', 'assets/sprites/elements/button_close.png')
     this.load.image('button_reset', 'assets/sprites/elements/button_reset.png')
+    this.load.image('button_settings', 'assets/sprites/elements/button_settings.png')
+
     this.load.image(
       'slider_button',
       'assets/sprites/elements/slider_button.png'

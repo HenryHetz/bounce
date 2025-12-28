@@ -126,6 +126,7 @@ export class Ball {
       y: this.y,
       alpha: 1,
       duration: 1000,
+      ease: 'Quad.easeOut',
     })
   }
   up() {
@@ -258,7 +259,7 @@ export class Ball {
   }
   stop() {
     if (this.bounceTween) this.bounceTween.stop()
-    this.emitter.explode(30, this.ball.x, this.ball.y)
+    // this.emitter.explode(30, this.ball.x, this.ball.y)
     this.up()
     // dev
     this.ballTrailEmitter.emitting = false

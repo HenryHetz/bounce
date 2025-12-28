@@ -33,7 +33,7 @@ export default class GameScene extends Phaser.Scene {
     this.paused = true;
     // dev - prod
     this.isDev = true
-    this.tweens.timeScale = 2
+    this.tweens.timeScale = 1
     this.houseEdge = 1.00 // его не должно быть в локале!
 
     // GAME STATE
@@ -54,12 +54,6 @@ export default class GameScene extends Phaser.Scene {
     this.baseDistanceY = 230
     this.distanceY = this.baseDistanceY + 60
     this.buttonY = 11.5 * this.gridUnit
-
-    // UI SETTINGS
-    this.buttonNameSpacing = 60
-    this.buttonIndent = 110
-    this.labelColor = '#13469A'
-    this.duration = 500 // это не duration, а половина цикла
 
     // STAKES & BALANCE
     this.betValues = BetValues
@@ -115,6 +109,12 @@ export default class GameScene extends Phaser.Scene {
       blue: '#05edff',
       black: '#000000'
     }
+
+    // UI SETTINGS
+    this.buttonNameSpacing = 60
+    this.buttonIndent = 110
+    this.labelColor = this.textColors.black
+    this.duration = 500 // это не duration, а половина цикла
   }
   create() {
     // создать центр логики, из которого будут брать данные все компоненты
@@ -131,12 +131,12 @@ export default class GameScene extends Phaser.Scene {
 
     this.background = new Background(this)
     // dev
-    this.fpsCounter = this.add.text(20, 1100, '', {
+    this.fpsCounter = this.add.text(20, 1000, '', {
       font: '16px monospace',
       fill: this.textColors.white,
     }).setDepth(100);
 
-    this.timeCounter = this.add.text(620, 1100, '0.00', {
+    this.timeCounter = this.add.text(620, 1000, '0.00', {
       font: '16px monospace',
       fill: this.textColors.white,
     }).setDepth(100).setAlign('right').setOrigin(1, 0);
@@ -190,6 +190,12 @@ export default class GameScene extends Phaser.Scene {
       onCash: () => this.handleButtonClick(),
       onTuner: () => this.riskTuner.show(true),
       onAuto: () => this.autoSetting.show(true, this.currentAutoSetting),
+      onSettings: () => {
+        // Implement settings button functionality here
+        this.tweens.timeScale += 0.5
+        if (this.tweens.timeScale > 2) this.tweens.timeScale = 1
+        console.log('Time Scale:', this.tweens.timeScale)
+      }
     })
 
     if (!this.sounds) this.createSounds()
