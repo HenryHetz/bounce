@@ -91,7 +91,7 @@ export class CameraManager {
 
   _onGameEvent(e) {
     switch (e.mode) {
-      case 'BOUNCE':
+      case 'HIT':
         this.bounceCount = e.count
         this.currentMultiplier = e.multiplier
 

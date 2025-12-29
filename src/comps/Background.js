@@ -42,10 +42,10 @@ export class Background {
       // this.reset()
       // this.move()
     }
-    if (data.mode === 'ROUND') {
+    if (data.mode === 'START') {
       // this.move()
     }
-    if (data.mode === 'BOUNCE') {
+    if (data.mode === 'HIT') {
       if (data.multiplier >= 1) {
         // this.bg.alpha = this.alpha - data.count / 200
       }

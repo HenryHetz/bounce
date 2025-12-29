@@ -17,7 +17,7 @@ export class Platforms {
         this.groupTotalHeight = 470 - this.scene.baseDistanceY
         this.blockWidth = 180
 
-        this.crashTable = []
+        this.payTable = []
         this.lastKnownStep = 0 // индекс шага для рендера чисел (count из событий)
         this.chessPhase = 0
 
@@ -39,7 +39,8 @@ export class Platforms {
         this.compiledMap = this.compileBlockMap(this.blockMap)
 
         this.multiplierToAmount = () => {
-            const stepLeft = this.crashTable.length - 1 - this.lastKnownStep
+            const stepLeft = this.payTable.length - 1 - this.lastKnownStep
+            // console.log('stepLeft', stepLeft)
             if (stepLeft <= 0) return 1
 
             let amount = 6
@@ -57,7 +58,8 @@ export class Platforms {
 
         this.patternProbabilities = 0.25 // 0.25 норм
 
-        const HE = this.scene.logicCenter.getHouseEdge()
+        // dev
+        const HE = this.scene.houseEdge
         const r = 1 - HE / 100
 
         const zones = {
@@ -77,8 +79,8 @@ export class Platforms {
                 zones.gte100 * p ** 2
             )
         }
-        console.log('Platforms patternProbabilities expected visible blocks:',
-            ev(this.patternProbabilities).toFixed(4), (1 / ev(this.patternProbabilities)).toFixed(0))
+        // console.log('Platforms patternProbabilities expected visible blocks:',
+        // ev(this.patternProbabilities).toFixed(4), (1 / ev(this.patternProbabilities)).toFixed(0))
 
         // Один сет (одна группа) в точке касания
         this.root = this.scene.add
@@ -111,7 +113,7 @@ export class Platforms {
 
     handleEvent(data) {
         if (data.mode === 'RISK_SETTING_CHANGED') {
-            this.crashTable = data.crashTable || []
+            this.payTable = data.payTable || []
             // this.lastKnownStep = 0
 
             // if (!this.currentPattern) this.startSet()
@@ -127,11 +129,12 @@ export class Platforms {
             return
         }
 
-        if (data.mode === 'BOUNCE') {
-            // console.log('Platforms BOUNCE data:', data)
+        if (data.mode === 'HIT') {
+            // console.log('Platforms HIT data:', data)
             // data.count = текущий шаг, который был выбит
             this.lastKnownStep = data.count
             this.lastKnownMulty = data.multiplier
+            this.nextMulty = data.nextMultiplier
             this.chessPhase ^= 1
             this.onBounce(data)
             // dev
@@ -300,7 +303,7 @@ export class Platforms {
             // это нужно проверять из сцены, и вообще должно приходить от сервера
             // но для простоты пусть будет тут
             // все блоки с паттерном — бонус!
-            const hasCashOut = this.scene.logicCenter.getHasCashout()
+            const hasCashOut = this.scene.hasCashout
             if (!hasCashOut) {
                 this.scene.sounds.jingle.play()
                 console.log('BONUS achieved! All patterns visible!')
@@ -322,7 +325,7 @@ export class Platforms {
     // -----------------------
     // setNextMulty(step) {
     //     let text = ''
-    //     const table = this.crashTable
+    //     const table = this.payTable
     //     const row = table[step]
     //     // console.log('setNextMulty step:', step, 'row:', row)
 
@@ -333,8 +336,8 @@ export class Platforms {
     //     this.scene.countdownCounter.set(text)
     // }
     renderMultipliers(startStep) {
-        // startStep = какой индекс crashTable показываем на верхнем блоке
-        const table = this.crashTable
+        // startStep = какой индекс payTable показываем на верхнем блоке
+        const table = this.payTable
         if (!Array.isArray(table) || table.length === 0) return
 
         for (let i = 0; i < this.blocks.length; i++) {
@@ -364,12 +367,12 @@ export class Platforms {
         // let amount = 4
         // if (this.lastKnownMulty >= 2) amount = 3 // 10
         // if (this.lastKnownMulty >= 10) amount = 2 // 100
-        // if (this.lastKnownStep + 1 === this.crashTable.length - 1) amount = 1 // на последную ставим одиночный
+        // if (this.lastKnownStep + 1 === this.payTable.length - 1) amount = 1 // на последную ставим одиночный
 
         const amount = this.multiplierToAmount()
         let candidates = this.compiledMap.list.filter((p) => p.blocks === amount)
 
-        // console.log(this.lastKnownMulty, this.lastKnownStep, 'pickNextPattern amount:', amount, this.crashTable.length)
+        // console.log(this.lastKnownMulty, this.lastKnownStep, 'pickNextPattern amount:', amount, this.payTable.length)
         // console.log('pickNextPattern candidates for amount', amount, ':', candidates)
         // return candidates[0] // dev
 
@@ -528,7 +531,7 @@ export class Platforms {
     }
 
     showCrashBlock(data) {
-        const crashStep = this.scene.logicCenter.getCrashIndex()
+        const crashStep = this.scene.сrashIndex // перенести в реестр и гет
 
         console.log('showCrashBlock crashStep:', crashStep, 'this.lastKnownStep:', this.lastKnownStep)
     }

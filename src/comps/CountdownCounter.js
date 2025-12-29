@@ -28,24 +28,38 @@ export class CountdownCounter {
         this.set(data.text)
         this.show(data.show)
       }
-    })
-    this.scene.events.on('gameEvent', (data) => {
-      if (data.mode === 'BOUNCE') {
-        this.setNextMulty(data.count)
+
+      if (data.mode === 'ROUND_PREPARE') {
+        // console.log('ROUND_PREPARE',)
+        // this.set(data.text)
+        // this.show(data.show)
+      }
+
+      if (data.mode === 'HIT') {
+        // console.log(data.count, 'nextMultiplier', data.nextMultiplier)
+        this.setNextMulty(data.nextMultiplier)
+      }
+
+      if (data.mode === 'FINISH') {
+        // console.log('ROUND_PREPARE',)
+        // this.set('')
+        // this.show(0)
       }
     })
+    // this.scene.events.on('gameEvent', (data) => {
+    //   if (data.mode === 'HIT') {
+    //     console.log(data.count, 'nextMultiplier', data.nextMultiplier)
+    //     this.setNextMulty(data.nextMultiplier)
+    //   }
+    // })
   }
-  setNextMulty(step) {
+  setNextMulty(m) {
     let text = ''
-    const table = this.scene.logicCenter.getCrashTable()
-    const row = table[step + 1] // следующий шаг
-    if (!row) {
-      console.warn('No row found for step:', step)
+    if (!m) {
+      this.set(text)
+      this.show(0)
       return
     }
-    // console.log('setNextMulty step:', step, 'row:', row)
-
-    const m = row.multiplier
     text = m >= 1000 ? m.toFixed(0) : m >= 100 ? m.toFixed(1) : m.toFixed(2)
 
     if (this.counter.alpha === 0) this.show(1)
@@ -62,29 +76,6 @@ export class CountdownCounter {
         this.counter.setScale(1)
       }
     })
-
-    // dev
-    return
-    const from = table[step].multiplier   // текущее число
-    const to = table[step + 1].multiplier    // новое число
-
-    if (this.counter.alpha === 0) this.show(1)
-
-    this.scene.tweens.add({
-      targets: { v: from },
-      v: to,
-      duration: 100,
-      ease: 'Sine.easeOut',
-      onUpdate: (tw, obj) => {
-        const val = obj.v;      // или fixed(2) для X
-        const text = val >= 1000 ? val.toFixed(0) : val >= 100 ? val.toFixed(1) : val.toFixed(2)
-        this.set(text)
-      },
-      onComplete: () => {
-        const text = to >= 1000 ? to.toFixed(0) : to >= 100 ? to.toFixed(1) : to.toFixed(2)
-        this.set(text)
-      }
-    });
   }
   set(value) {
     this.counter.setText(value)

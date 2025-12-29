@@ -32,7 +32,7 @@ export class RiskSettingNotice {
     // console.log('RISK_SETTING_CHANGED', data)
     // default: this.defaultRiskSetting,
     // current: this.currentRiskSetting,
-    // crashTable: this.crashTable,
+
     // старый метод
     if (data) {
       // это кастом или дефолт?

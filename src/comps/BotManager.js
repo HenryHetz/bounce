@@ -17,7 +17,7 @@ export class BotManager {
       this.generate()
       this.render()
     }
-    if (data.mode === 'BOUNCE') {
+    if (data.mode === 'HIT') {
       this.update(data.multiplier)
       this.render()
     }

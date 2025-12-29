@@ -106,11 +106,14 @@ export class Ball {
     if (data.mode === 'ROUND_PREPARE') {
       this.reset()
     }
-    if (data.mode === 'ROUND') {
-      this.fall(this.bounceHandler) // это и this.bounce практически одно и тоже!
+    if (data.mode === 'START') {
+      this.fall() // это и this.bounce практически одно и тоже!
     }
-    if (data.mode === 'BOUNCE') {
-      this.bounce(this.bounceHandler) // всё надо синхронизировать в update!!!
+    if (data.mode === 'FALL') {
+      this.fall() // это и this.bounce практически одно и тоже!
+    }
+    if (data.mode === 'HIT') {
+      this.bounce() // всё надо синхронизировать в update!!!
       // this.fall(this.bounceHandler)
       this.updateEffects(data.multiplier)
     }
@@ -204,68 +207,79 @@ export class Ball {
     });
   }
   fall(callback) {
-    this.scene.tweens.add({
-      targets: this.ball,
-      y: this.y + 10,
-      duration: 300, // this.duration / 2
-      //   yoyo: true,
-      ease: 'Quad.easeIn', // 'Sine.easeIn'
-      onComplete: () => {
-        this.scene.tweens.add({
-          targets: this.ball,
-          y: this.y + this.distanceY,
-          // delay: this.duration / 2,
-          duration: 200, // this.duration / 2
-          //   yoyo: true,
-          ease: 'Quad.easeIn', // 'Sine.easeIn'
-          onComplete: () => {
-            if (callback) callback()
-            // this.bounce(callback)
-            // const timeNow = new Date().getTime();
-            // console.log('hit', this.scene.elapsedSec)
-          },
-        })
-      },
-    })
+    // надо остановить подъём? 
+    // как синхронизировать?
+    this.stopTween()
+    this.bounceTween =
+      this.scene.tweens.add({
+        targets: this.ball,
+        y: this.y + 10,
+        duration: 300, // this.duration / 2
+        //   yoyo: true,
+        ease: 'Quad.easeIn', // 'Sine.easeIn'
+        onComplete: () => {
+          this.scene.tweens.add({
+            targets: this.ball,
+            y: this.y + this.distanceY,
+            // delay: this.duration / 2,
+            duration: 200, // this.duration / 2
+            //   yoyo: true,
+            ease: 'Quad.easeIn', // 'Sine.easeIn'
+            onComplete: () => {
+              if (callback) callback()
+              // this.bounce(callback)
+              // const timeNow = new Date().getTime();
+              // console.log('ball hit', this.scene.elapsedSec)
+            },
+          })
+        },
+      })
 
   }
   bounce(callback) {
-    this.scene.tweens.add({
-      targets: this.ball,
-      y: this.y + 10,
-      duration: 300, // this.duration
-      ease: 'Quad.easeOut', // Quart
-      onComplete: () => {
-        // setTimeout(() => {
-        //   if (callback) callback()
-        // }, this.duration / 2);
-        this.scene.tweens.add({
-          targets: this.ball,
-          y: this.y,
-          duration: 200, // this.duration
-          // yoyo: true,
-          ease: 'Quad.easeOut', // Qubic
-          // onYoyo: () => { },
-          onComplete: () => {
-            // if (callback) callback()
-            this.fall(callback)
-            // console.log('apogei',)
-          },
-        })
-        // if (callback) callback()
-        // console.log('bounce',)
-      },
-    })
+    // stop falling
+    this.stopTween()
+    this.ball.y = this.y + this.distanceY
+
+    this.bouncing =
+      this.scene.tweens.add({
+        targets: this.ball,
+        y: this.y + 10,
+        duration: 300, // this.duration
+        ease: 'Quad.easeOut', // Quart
+        onComplete: () => {
+          // setTimeout(() => {
+          //   if (callback) callback()
+          // }, this.duration / 2);
+          this.scene.tweens.add({
+            targets: this.ball,
+            y: this.y,
+            duration: 200, // this.duration
+            // yoyo: true,
+            ease: 'Quad.easeOut', // Qubic
+            // onYoyo: () => { },
+            onComplete: () => {
+              if (callback) callback()
+              // this.fall(callback)
+              // console.log('apogei',)
+            },
+          })
+          // if (callback) callback()
+          // console.log('bounce',)
+        },
+      })
   }
   stop() {
-    if (this.bounceTween) this.bounceTween.stop()
+    this.stopTween()
     // this.emitter.explode(30, this.ball.x, this.ball.y)
     this.up()
     // dev
     this.ballTrailEmitter.emitting = false
     if (this.pulseTween) this.pulseTween.pause()
   }
-
+  stopTween() {
+    if (this.bounceTween) this.bounceTween.stop()
+  }
   setBounceTween(tween) {
     this.bounceTween = tween
   }

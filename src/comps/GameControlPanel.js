@@ -182,7 +182,7 @@ export class GameControlPanel {
     this.handlers = {
       // GameState
       COUNTDOWN: this.onCountdown,
-      ROUND: this.onRound,
+      START: this.onRound,
       FINISH: this.onFinish,
 
       // GameAction
@@ -191,7 +191,7 @@ export class GameControlPanel {
       BET_CHANGED: this.onBetChanged,
       BET_ALLOWED: this.onBetAllowed,
       BET: this.onBet,
-      BOUNCE: this.onBounce,
+      HIT: this.onBounce,
       AUTO_SETTING_CHANGED: this.onAutoSetChanged,
     }
   }

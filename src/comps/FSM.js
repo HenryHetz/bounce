@@ -25,12 +25,12 @@ export class FSM {
 
   toRound() {
     if (this.state !== 'COUNTDOWN') return
-    this.state = 'ROUND'
+    this.state = 'START'
     this.emitChange()
   }
 
   toFinish() {
-    if (this.state !== 'ROUND') return
+    if (this.state !== 'START') return
     this.state = 'FINISH'
     this.emitChange()
   }

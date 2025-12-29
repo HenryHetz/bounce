@@ -1,3 +1,7 @@
+// нужен: краш, кэш-аут, взятие последней плашки - фанфары (crash, cashout, complete)
+// бонус: вход, игра, выход, добавление бонуса по ходу
+// может дать на последних ударах больше паузы?
+
 import { DEFAULT_RISK_SETTING } from '../constants/riskConstants'
 import { DEFAULT_AUTOBET_SETTING } from '../constants/autobetConstants'
 import { DEFAULT_GAME_CONFIG } from '../constants/defaultGameConfig'
@@ -33,7 +37,7 @@ export default class GameScene extends Phaser.Scene {
     this.paused = true;
     // dev - prod
     this.isDev = true
-    this.tweens.timeScale = 1
+    this.timeScale = 1
     this.houseEdge = 3.00 // его не должно быть в локале!
 
     // GAME STATE
@@ -118,18 +122,8 @@ export default class GameScene extends Phaser.Scene {
     this.duration = 500 // это не duration, а половина цикла
   }
   create() {
-    // создать центр логики, из которого будут брать данные все компоненты
-    this.logicCenter = {
-      getCurrentRiskSetting: () => this.currentRiskSetting,
-      getCurrentAutoSetting: () => this.currentAutoSetting,
-      getCrashTable: () => this.crashTable,
-      getCrashIndex: () => this.crashIndex,
-      getCurrentStep: () => this.bounceCount,
-      getHasCashout: () => this.hasCashOut,
-      getHouseEdge: () => this.houseEdge,
-      // приватные методы
-      // _set
-    }
+    this.game.events.on('blur', () => this.onAppBlur())
+    this.game.events.on('focus', () => this.onAppFocus())
 
     this.background = new Background(this)
     // dev
@@ -180,8 +174,8 @@ export default class GameScene extends Phaser.Scene {
     this.countdownCounter = new CountdownCounter(this)
     this.moneyCounter = new MoneyCounter(this, this.initialDeposit)
     // this.skull = new Skull(this)
-    this.ball = new Ball(this, this.emitter, this.bounceHandler.bind(this))
-    this.platforms = new Platforms(this, this.crashTable)
+    this.ball = new Ball(this, this.emitter,) // this.bounceHandler.bind(this)
+    this.platforms = new Platforms(this)
 
     this.riskTuner = new RiskTunerPanel(this, this.defaultRiskSetting)
     this.riskSettingNotice = new RiskSettingNotice(this)
@@ -194,9 +188,17 @@ export default class GameScene extends Phaser.Scene {
       onAuto: () => this.autoSetting.show(true, this.currentAutoSetting),
       onSettings: () => {
         // Implement settings button functionality here
-        this.tweens.timeScale += 0.5
-        if (this.tweens.timeScale > 2) this.tweens.timeScale = 1
-        console.log('Time Scale:', this.tweens.timeScale)
+        // пока ручка скорости игры
+        this.timeScale += 0.5
+        if (this.timeScale > 2) this.timeScale = 1
+
+        this.gameSpeed = this.timeScale
+        // анимации
+        this.tweens.timeScale = this.timeScale
+        // таймеры delayedCall / addEvent
+        this.time.timeScale = this.timeScale
+
+        console.log('Time Scale:', this.timeScale)
       }
     })
 
@@ -236,6 +238,28 @@ export default class GameScene extends Phaser.Scene {
         .setScale(1)
         .setDepth(this.cameraManager.widget.depth + 1)
   }
+  // при переключении вкладки
+  onAppBlur() {
+    // 1) заморозить time/tweens
+    this.tweens.pauseAll()
+    this.time.paused = true
+
+    // 2) зафиксировать состояние FSM как PAUSED_IN_BACKGROUND
+    this.roundPaused = true
+
+    // 3) если хотите — запретить действия UI
+    this.events.emit('gameEvent', { mode: 'PAUSE' })
+  }
+  onAppFocus() {
+    // либо: продолжить
+    this.time.paused = false
+    this.tweens.resumeAll()
+    this.roundPaused = false
+    this.events.emit('gameEvent', { mode: 'RESUME' })
+
+    // либо (часто лучше для демо/честности): завершить/сбросить раунд
+    // this.forceResetRound('background')
+  }
   handleButtonClick() {
     // console.log('handleButtonClick')
     const state = this.fsm.getState()
@@ -246,7 +270,7 @@ export default class GameScene extends Phaser.Scene {
     }
 
     if (
-      state === 'ROUND' &&
+      state === 'START' &&
       this.cashOutAllowed &&
       this.hasBet &&
       !this.hasCashOut
@@ -413,18 +437,18 @@ export default class GameScene extends Phaser.Scene {
       // console.log('FSM state:', state)
       switch (state) {
         case 'COUNTDOWN':
-          this.events.emit('gameEvent', {
-            mode: 'COUNTDOWN',
-            betValue: this.currentBetValue,
-          })
+          // this.events.emit('gameEvent', {
+          //   mode: 'COUNTDOWN',
+          //   betValue: this.currentBetValue,
+          // })
           this.countdown()
           break
-        case 'ROUND':
-          this.events.emit('gameEvent', {
-            mode: 'ROUND',
-            hasBet: this.hasBet,
-          })
-          this.round()
+        case 'START':
+          // this.events.emit('gameEvent', {
+          //   mode: 'START',
+          //   hasBet: this.hasBet,
+          // })
+          this.startRound()
           break
         case 'FINISH':
           this.events.emit('gameEvent', {
@@ -438,13 +462,17 @@ export default class GameScene extends Phaser.Scene {
           this.finish()
           break
       }
-      // нужен: краш, кэш-аут, взятие последней плашки - фанфары
+      // нужен: краш, кэш-аут, взятие последней плашки - фанфары (crash, cashout, complete)
       // бонус: вход, игра, выход, добавление бонуса по ходу
     })
   }
   // round machine
   countdown() {
     // console.time('Time to betting')
+    this.events.emit('gameEvent', {
+      mode: 'COUNTDOWN',
+      betValue: this.currentBetValue,
+    })
 
     this.setBetAllowed(true)
     this.hasCashOut = false
@@ -482,8 +510,10 @@ export default class GameScene extends Phaser.Scene {
             callback: () => {
               this.events.emit('gameEvent', {
                 mode: 'COUNTDOWN_UPDATE',
-                text: '',
-                show: false,
+                text: this.payTable[0].multiplier.toFixed(2),
+                show: 1,
+                // text: '',
+                // show: false,
               })
             },
           })
@@ -515,7 +545,10 @@ export default class GameScene extends Phaser.Scene {
       delay: roundStartDelay, // this.duration * roundStartDelay
       callback: () => {
         this.initCrashIndex() // хранить на сервере, запрашивать isCrash каждое касание (за 100 мс)
-        console.log('crashIndex', this.crashIndex)
+        // console.log('crashIndex', this.crashIndex)
+        if (this.crashIndex >= this.payTable.length) console.log('проход до финиша')
+        else console.log('crashIndex', this.crashIndex, 'X', this.payTable[this.crashIndex].multiplier)
+
         this.isCrashed = false
         this.bounceCount = 0
         this.roundCounter++
@@ -539,25 +572,58 @@ export default class GameScene extends Phaser.Scene {
       },
     })
   }
-  round() {
+  startRound() {
     // console.timeEnd('Time to betting')
     // console.time('Round time')
-    // console.log('round', this.stakeValue)
+    // console.log('startRound', this.stakeValue)
     this.paused = false;
+
+    this.events.emit('gameEvent', {
+      mode: 'START',
+      hasBet: this.hasBet,
+    })
+
+    this.time.delayedCall(this.duration, () => {
+      this.onHit()
+    })
   }
-  bounceHandler() {
-    // console.log('bounceHandler')
+  // onHit() {
+  //   console.log('onHit',)
+  //   // проверяем условия касания ?
+
+  //   this.time.delayedCall(this.duration, () => {
+  //     this.onBounce()
+  //   })
+  // }
+  onBounce() {
+    // console.log('onBounce', this.paused)
+    if (this.paused) return
+    // запросы на сервер? Что здесь?
+    this.events.emit('gameEvent', {
+      mode: 'FALL',
+    })
+
+    this.time.delayedCall(this.duration, () => {
+      this.onHit()
+    })
+  }
+  onHit() {
+    // console.log('scene hit', this.elapsedSec)
     this.checkCrash(this.bounceCount)
     // ещё надо чекать последнюю платформу
     if (this.isCrashed) this.fsm.toFinish()
     else {
-      const multiplier = this.crashTable[this.bounceCount].multiplier
+      const multiplier = this.payTable[this.bounceCount].multiplier
+      const nextMultiplier = this.payTable[this.bounceCount + 1] ?
+        this.payTable[this.bounceCount + 1].multiplier : undefined
+
       this.stakeValue = this.currentBetValue * multiplier
 
       this.events.emit('gameEvent', {
-        mode: 'BOUNCE',
+        mode: 'HIT',
         count: this.bounceCount,
         multiplier: multiplier,
+        nextMultiplier,
         stakeValue: this.stakeValue,
         hasBet: this.hasBet,
       })
@@ -568,13 +634,18 @@ export default class GameScene extends Phaser.Scene {
       if (this.currentAutoSetting.cashout > 0) this.checkAutoCashout(multiplier)
 
       this.bounceCount++
-      // this.sounds.coin.play()
+
+      // если нет продолжения нужно делать фейрверк
 
       // dev
       // if (multiplier >= this.smallShakeX && multiplier < this.medShakeX)
       //   this.cameras.main.shake(100, 0.002)
       // if (multiplier >= this.medShakeX) this.cameras.main.shake(100, 0.002)
 
+      // отскок и новое падение следом
+      this.time.delayedCall(this.duration, () => {
+        this.onBounce()
+      })
       //
       this.sounds.hit.play()
     }
@@ -666,7 +737,9 @@ export default class GameScene extends Phaser.Scene {
   // local
   handleRiskSettings_local(settings) {
     this.currentRiskSetting = { ...settings }
-    this.crashTable = this.generateCrashTable(this.currentRiskSetting)
+    const tables = this.generateCrashTable(this.currentRiskSetting)
+    this.crashTable = tables.crashTable // живёт на сервере
+    this.payTable = tables.payTable // нужен на клиенте
     this.pendingRiskSetting = null
 
     this.events.emit('gameEvent', {
@@ -674,6 +747,7 @@ export default class GameScene extends Phaser.Scene {
       default: this.defaultRiskSetting,
       current: this.currentRiskSetting,
       crashTable: this.crashTable,
+      payTable: this.payTable
     })
   }
   generateCrashTable(crashSetting) { // old
@@ -681,9 +755,9 @@ export default class GameScene extends Phaser.Scene {
 
     const ratio = Math.pow(
       crashSetting.maxPayout / crashSetting.minPayout,
-      1 / (crashSetting.steps - 2)
+      1 / (crashSetting.steps - 1)
     )
-    console.log('ratio', ratio)
+    // console.log('ratio', ratio)
 
     const RTP = 1 - this.houseEdge / 100
     const houseEdge = .05
@@ -691,8 +765,9 @@ export default class GameScene extends Phaser.Scene {
     let acc = 0
 
     const crashTable = []
+    const payTable = []
 
-    for (let i = 0; i < crashSetting.steps; i++) {
+    for (let i = 0; i <= crashSetting.steps; i++) {
       let multiplier, base, real_multyplier
       if (i === 0) {
         multiplier = 1
@@ -713,6 +788,13 @@ export default class GameScene extends Phaser.Scene {
         acc: undefined,
         base,
       })
+
+      if (i > 0) {
+        payTable.push({
+          step: i,
+          multiplier,
+        })
+      }
     }
 
     for (let i = crashTable.length - 1; i >= 0; i--) {
@@ -728,12 +810,13 @@ export default class GameScene extends Phaser.Scene {
     }
 
     console.table(crashTable)
+    console.table(payTable)
     // dev
-    this.checkMath(crashTable)
+    // this.checkMath(crashTable)
 
     // dev
     // this.generateCrashTable_(crashSetting)
-    return crashTable
+    return { crashTable, payTable }
   }
   _generateCrashTable(crashSetting) { // new
     console.log('generateCrashTable', crashSetting, this.houseEdge)
@@ -775,7 +858,7 @@ export default class GameScene extends Phaser.Scene {
         base,
       })
     }
-    console.table(crashTable)
+    // console.table(crashTable)
 
     for (let i = crashTable.length - 1; i >= 0; i--) {
       // console.log(i, 'обратка', i, crashTable[i].multiplier)
@@ -791,7 +874,7 @@ export default class GameScene extends Phaser.Scene {
 
     console.table(crashTable)
     // dev
-    this.checkMath(crashTable)
+    // this.checkMath(crashTable)
     return crashTable
   }
   checkMath(crashTable) {
@@ -860,7 +943,7 @@ export default class GameScene extends Phaser.Scene {
       }
     }
     this.crashIndex = getCrashIndex(this.crashTable) // следующий будет краш!
-    this.crashIndex > 0 ? (this.crashIndex += 1) : 0
+    // this.crashIndex > 0 ? (this.crashIndex += 1) : 0
 
     return this.crashIndex
   }
@@ -929,86 +1012,3 @@ export default class GameScene extends Phaser.Scene {
   }
 
 }
-
-/**
-generateCrashTable(crashSetting) {
-    // console.log('generateCrashTable', crashSetting, this.houseEdge)
-
-    const ratio = Math.pow(
-      crashSetting.maxPayout / crashSetting.minPayout,
-      1 / (crashSetting.steps - 2)
-    )
-    // console.log('ratio', ratio)
-
-    const RTP = 1 - this.houseEdge / 100
-    const houseEdge = .05
-
-    let acc = 0
-
-    const crashTable = []
-
-    for (let i = 0; i < crashSetting.steps; i++) {
-      let multiplier, base, real_multyplier
-      if (i === 0) {
-        multiplier = 1
-        real_multyplier = 1
-        base = 0
-      } else {
-        multiplier = crashSetting.minPayout * Math.pow(ratio, i - 1)
-        base = RTP / multiplier
-        real_multyplier = multiplier
-        if (i !== crashSetting.steps - 1 && i !== 1) real_multyplier *= (1 - houseEdge)
-      }
-
-      crashTable.push({
-        step: i,
-        multiplier,
-        real_multyplier,
-        probability: undefined,
-        acc: undefined,
-        base,
-      })
-    }
-
-    for (let i = crashTable.length - 1; i >= 0; i--) {
-      // console.log(i, 'обратка', i, crashTable[i].multiplier)
-      if (i < crashTable.length - 1 && i !== 0) {
-        crashTable[i].probability = crashTable[i].base - crashTable[i + 1].base
-      } else {
-        crashTable[i].probability = crashTable[i].base
-      }
-      crashTable[i].acc = 1 - acc
-      acc += crashTable[i].probability
-      if (i === 0) crashTable[i].probability = 1 - acc
-    }
-
-    // console.table(crashTable)
-    // dev
-    // this.checkMath(crashTable)
-    return crashTable
-  }
-
-  initCrashIndex_local_() { // new
-    let random = Math.random()
-    console.log('random', random)
-    // random = 0.999999999 // dev - а что когда 1 или выше??
-    let multiplier = null
-    let index = 0
-    let acc = 0
-    function getCrashIndex(crashTable) {
-      for (let i = 0; i < crashTable.length; i++) {
-        // acc += crashTable[i].probability
-        if (random < crashTable[i].acc) {
-          acc = crashTable[i].acc
-          multiplier = crashTable[i].multiplier
-          index = i
-          return i
-        }
-      }
-    }
-    this.crashIndex = getCrashIndex(this.crashTable) // следующий будет краш!
-    // this.crashIndex > 0 ? (this.crashIndex += 1) : 0
-
-    return this.crashIndex
-  }
- */
