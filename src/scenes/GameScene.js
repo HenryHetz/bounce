@@ -37,7 +37,10 @@ export default class GameScene extends Phaser.Scene {
     this.paused = true;
     // dev - prod
     this.isDev = true
-    this.timeScale = 1
+    this.timeScale = 0.5
+    this.setTimeScale()
+    //this.time.timeScale = this.timeScale
+
     this.houseEdge = 5.00 // его не должно быть в локале!
 
     // GAME STATE
@@ -122,8 +125,8 @@ export default class GameScene extends Phaser.Scene {
     this.duration = 500 // это не duration, а половина цикла
   }
   create() {
-    this.game.events.on('blur', () => this.onAppBlur())
-    this.game.events.on('focus', () => this.onAppFocus())
+    // this.game.events.on('blur', () => this.onAppBlur())
+    // this.game.events.on('focus', () => this.onAppFocus())
 
     this.background = new Background(this)
     // dev
@@ -190,16 +193,17 @@ export default class GameScene extends Phaser.Scene {
       onSettings: () => {
         // Implement settings button functionality here
         // пока ручка скорости игры
-        this.timeScale += 0.5
-        if (this.timeScale > 2) this.timeScale = 1
+        this.setTimeScale()
+        // this.timeScale += 0.5
+        // if (this.timeScale > 2) this.timeScale = 1
 
-        this.gameSpeed = this.timeScale
-        // анимации
-        this.tweens.timeScale = this.timeScale
-        // таймеры delayedCall / addEvent
-        this.time.timeScale = this.timeScale
+        // this.gameSpeed = this.timeScale
+        // // анимации
+        // this.tweens.timeScale = this.timeScale
+        // // таймеры delayedCall / addEvent
+        // this.time.timeScale = this.timeScale
 
-        console.log('Time Scale:', this.timeScale)
+        // console.log('Time Scale:', this.timeScale)
       }
     })
 
@@ -238,6 +242,18 @@ export default class GameScene extends Phaser.Scene {
         .setAlpha(1)
         .setScale(1)
         .setDepth(this.cameraManager.widget.depth + 1)
+  }
+  setTimeScale() {
+    this.timeScale += 0.5
+    if (this.timeScale > 2) this.timeScale = 1
+
+    this.gameSpeed = this.timeScale
+    // анимации
+    this.tweens.timeScale = this.timeScale
+    // таймеры delayedCall / addEvent
+    this.time.timeScale = this.timeScale
+
+    console.log('Time Scale:', this.timeScale)
   }
   // при переключении вкладки
   onAppBlur() {
@@ -410,18 +426,18 @@ export default class GameScene extends Phaser.Scene {
       }
     )
   }
-  createGradientTexture(key, color, width, height) {
-    const canvas = this.textures.createCanvas(key, width, height)
-    const ctx = canvas.getContext()
+  // createGradientTexture(key, color, width, height) {
+  //   const canvas = this.textures.createCanvas(key, width, height)
+  //   const ctx = canvas.getContext()
 
-    const gradient = ctx.createLinearGradient(0, 0, 0, height)
-    gradient.addColorStop(0, `rgba(${color}, 0.5)`)
-    gradient.addColorStop(1, `rgba(${color}, 0)`)
+  //   const gradient = ctx.createLinearGradient(0, 0, 0, height)
+  //   gradient.addColorStop(0, `rgba(${color}, 0.5)`)
+  //   gradient.addColorStop(1, `rgba(${color}, 0)`)
 
-    ctx.fillStyle = gradient
-    ctx.fillRect(0, 0, width, height)
-    canvas.refresh()
-  }
+  //   ctx.fillStyle = gradient
+  //   ctx.fillRect(0, 0, width, height)
+  //   canvas.refresh()
+  // }
   update(time, deltaMs) {
     this.fpsCounter.setText(`FPS: ${this.game.loop.actualFps.toFixed(0)}`);
 
@@ -587,6 +603,19 @@ export default class GameScene extends Phaser.Scene {
     this.time.delayedCall(this.duration, () => {
       this.onHit()
     })
+
+    const bonza = this.crashIndex === 0 ? false : true
+    let depth = this.rnd.between(1, 5)
+    if (depth > this.crashIndex) depth = this.crashIndex
+
+    this.events.emit('gameEvent', {
+      mode: 'FALL',
+      load: {
+        mode: bonza ? 'bonza' : 'common', // dev
+        // mode: 'common',
+        depth: depth,
+      }
+    })
   }
   // onHit() {
   //   console.log('onHit',)
@@ -602,6 +631,10 @@ export default class GameScene extends Phaser.Scene {
     // запросы на сервер? Что здесь?
     this.events.emit('gameEvent', {
       mode: 'FALL',
+      load: {
+        mode: 'common', // 
+
+      }
     })
 
     this.time.delayedCall(this.duration, () => {

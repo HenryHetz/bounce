@@ -1,3 +1,5 @@
+import { BallTrail } from './BallTrail.js';
+
 export class Ball {
   constructor(scene, emitter, bounceHandler) {
     this.scene = scene
@@ -12,7 +14,7 @@ export class Ball {
     this.duration = scene.duration
     this.emitter = emitter
     this.bounceHandler = bounceHandler
-    this.depth = 10
+    this.depth = 20
 
     this.color = this.scene.standartColors.red // красный цвет
     // this.ball = scene.add
@@ -31,6 +33,13 @@ export class Ball {
 
     this.createEvents()
     this.createEffects()
+
+    // dev
+    this.trail = new BallTrail(scene, {
+      x: this.x,
+      y: this.y,
+      width: this.diameter,
+    });
   }
   createEffects() {
     // Создаем emitter на старте сцены
@@ -107,13 +116,13 @@ export class Ball {
       this.reset()
     }
     if (data.mode === 'START') {
-      this.fall() // это и this.bounce практически одно и тоже!
+      // this.fall() // 
     }
     if (data.mode === 'FALL') {
-      this.fall() // это и this.bounce практически одно и тоже!
+      this.fallHandler(data.load) // 
     }
     if (data.mode === 'HIT') {
-      this.bounce() // всё надо синхронизировать в update!!!
+      this.bounce() // всё надо синхронизировать 
       // this.fall(this.bounceHandler)
       this.updateEffects(data.multiplier)
     }
@@ -206,10 +215,61 @@ export class Ball {
       ]
     });
   }
-  fall(callback) {
-    // надо остановить подъём? 
-    // как синхронизировать?
+  fallHandler(load) {
+    // console.log('fallHandler', load.mode, load.depth)
+    if (load.mode === 'common') this.fall()
+    if (load.mode === 'bonza') this.rush(load.depth)
+  }
+  rush(amount) {
     this.stopTween()
+
+    this.trail.start();
+
+    this.bounceTween =
+      this.scene.tweens.add({
+        targets: this.ball,
+        y: this.hitPointY,
+        duration: this.duration - (amount * 60), // this.duration / 2
+        //   yoyo: true,
+        ease: 'Quad.easeIn', // 'Sine.easeIn'
+        onUpdate: (tween) => {
+          // рисовать след
+          // onUpdate твина
+          this.trail.render(this.ball.y);
+          // this.trail.render(this.ball.x, this.ball.y - this.diameter / 2);
+          // this.drawShadow(this.ball.y, tween.progress)
+          // if (!patternSwitched && tween.progress > 0.95) {
+          // }
+        },
+        onComplete: () => {
+          for (let index = 1; index <= amount; index++) {
+            // пробиваем
+            const y = this.hitPointY + index * 40
+            this.scene.tweens.add({
+              targets: this.ball,
+              y: y,
+              delay: 50 * index,
+              duration: 10,
+              ease: 'Back.easeIn', // 'Sine.easeIn'
+              onComplete: () => {
+                // this.trail.stop();
+                this.scene.cameras.main.shake(50, 0.005)
+                this.trail.render(this.ball.y);
+              },
+            })
+          }
+
+          // this.trail.stop();
+        },
+      })
+  }
+  drawShadow(y, progress) {
+    // console.log('drawShadow', y, progress)
+  }
+  fall(callback) {
+    this.stopTween()
+    // this.trail.start();
+
     this.bounceTween =
       this.scene.tweens.add({
         targets: this.ball,
@@ -217,7 +277,10 @@ export class Ball {
         duration: this.duration * 0.6, // this.duration / 2
         //   yoyo: true,
         ease: 'Quad.easeIn', // 'Sine.easeIn'
+
         onComplete: () => {
+          // this.trail.start();
+
           this.scene.tweens.add({
             targets: this.ball,
             y: this.y + this.distanceY,
@@ -225,7 +288,12 @@ export class Ball {
             duration: this.duration * 0.4, // this.duration / 2
             //   yoyo: true,
             ease: 'Quad.easeIn', // 'Sine.easeIn'
+            onUpdate: (tween) => {
+              // this.trail.render(this.ball.y);
+            },
             onComplete: () => {
+              // this.trail.stop();
+              // this.trail.render(this.ball.y);
               if (callback) callback()
               // this.bounce(callback)
               // const timeNow = new Date().getTime();
@@ -238,6 +306,7 @@ export class Ball {
   }
   bounce(callback) {
     // stop falling
+    this.trail.stop();
     this.stopTween()
     this.ball.y = this.y + this.distanceY
 

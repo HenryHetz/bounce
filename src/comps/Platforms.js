@@ -94,7 +94,7 @@ export class Platforms {
         this.currentPattern = null
         this.currentPatternId = null
 
-        this.createAssets()
+        // this.createAssets()
         this.createEvents()
     }
 
