@@ -90,7 +90,7 @@ export default class PreloadScene extends Phaser.Scene {
       'assets/sprites/sheets/smileys.json'
     )
     // bg
-    this.load.image('main_bg', 'assets/sprites/bg/BOUNCE_FUJI_BG_2.png')
+    this.load.image('main_bg', 'assets/sprites/bg/BOUNCE_FUJI_BG_T_1.png')
     this.load.image('tuner_bg', 'assets/sprites/bg/tuner_bg.jpg')
     this.load.image('pattern', 'assets/sprites/bg/pattern.jpg')
     // console.log('pattern texture key:', pattern.texture.key)

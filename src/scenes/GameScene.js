@@ -38,7 +38,7 @@ export default class GameScene extends Phaser.Scene {
     // dev - prod
     this.isDev = true
     this.timeScale = 1
-    this.houseEdge = 3.00 // его не должно быть в локале!
+    this.houseEdge = 5.00 // его не должно быть в локале!
 
     // GAME STATE
     this.isCrashed = false
@@ -162,10 +162,11 @@ export default class GameScene extends Phaser.Scene {
     // this.liveOps = new LiveOpsManager(this) // нужно изучить
     // this.ghost = new Ghost(this)
 
+    // вынести в отдельный модуль и переключать на блок Х
     this.header = this.add
       .image(320, 0, 'header')
       .setOrigin(0.5, 0)
-      .setAlpha(1)
+      .setAlpha(0)
       .setScale(1)
       .setDepth(200)
 

@@ -214,7 +214,7 @@ export class Ball {
       this.scene.tweens.add({
         targets: this.ball,
         y: this.y + 10,
-        duration: 300, // this.duration / 2
+        duration: this.duration * 0.6, // this.duration / 2
         //   yoyo: true,
         ease: 'Quad.easeIn', // 'Sine.easeIn'
         onComplete: () => {
@@ -222,7 +222,7 @@ export class Ball {
             targets: this.ball,
             y: this.y + this.distanceY,
             // delay: this.duration / 2,
-            duration: 200, // this.duration / 2
+            duration: this.duration * 0.4, // this.duration / 2
             //   yoyo: true,
             ease: 'Quad.easeIn', // 'Sine.easeIn'
             onComplete: () => {
@@ -245,7 +245,7 @@ export class Ball {
       this.scene.tweens.add({
         targets: this.ball,
         y: this.y + 10,
-        duration: 300, // this.duration
+        duration: this.duration * 0.6, // this.duration
         ease: 'Quad.easeOut', // Quart
         onComplete: () => {
           // setTimeout(() => {
@@ -254,7 +254,7 @@ export class Ball {
           this.scene.tweens.add({
             targets: this.ball,
             y: this.y,
-            duration: 200, // this.duration
+            duration: this.duration * 0.4, // this.duration
             // yoyo: true,
             ease: 'Quad.easeOut', // Qubic
             // onYoyo: () => { },

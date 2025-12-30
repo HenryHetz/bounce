@@ -531,7 +531,7 @@ export class Platforms {
     }
 
     showCrashBlock(data) {
-        const crashStep = this.scene.сrashIndex // перенести в реестр и гет
+        const crashStep = this.scene.crashIndex // перенести в реестр и гет
 
         console.log('showCrashBlock crashStep:', crashStep, 'this.lastKnownStep:', this.lastKnownStep)
     }

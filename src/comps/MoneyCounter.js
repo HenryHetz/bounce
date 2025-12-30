@@ -3,7 +3,7 @@ export class MoneyCounter {
     this.scene = scene
     this.currentValue = initial
     this.x = 625
-    this.y = 50
+    this.y = 44
 
     this.counter = scene.add
       .text(this.x, this.y, initial.toFixed(2), {
