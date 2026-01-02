@@ -566,11 +566,11 @@ export class Platforms {
     showBonusBlocks() {
         let count = 0
         const delay = 50
-        const half = 70   // подстрой под темп (мс)
+        const half = 50   // подстрой под темп (мс)
 
         this.blocks.forEach((block) => {
             if (!block.__bonus) return
-            count++
+            // count++
 
             const front = block.__rect
             const back = block.__pattern
@@ -586,6 +586,8 @@ export class Platforms {
             back.y = back.y - height / 2
 
             const d = count * delay
+
+            count++
 
             // 1) схлопнуть фронт по Y (как бы "повернуть" вокруг X)
             this.scene.tweens.add({
