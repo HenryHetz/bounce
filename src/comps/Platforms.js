@@ -245,7 +245,7 @@ export class Platforms {
             targets: this.setContainer,
             y: this.setContainer.y - removedH,
             delay: 50,
-            duration: 200, //  Math.max(60, Math.floor(this.duration * 0.25))
+            duration: 150, //  Math.max(60, Math.floor(this.duration * 0.25))
             // ease: 'Back.easeInOut', // Cubic Back.easeInOut
             ease: easeBackInOut,
             onUpdate: (tween) => {
@@ -268,7 +268,7 @@ export class Platforms {
                 this.applyPattern(next, { immediate: true })
                 this.renderMultipliers(data.count + 1)
                 this.showBonusBlocks(this.blocks)
-                const detune = 1800 + Phaser.Math.Between(0, 400) // data.count * 10
+                // const detune = 1800 + Phaser.Math.Between(0, 400) // data.count * 10
                 // this.scene.sounds.domino.play({ detune: detune })
                 // console.log(data.count, 'domino.play', detune)
             },
@@ -453,7 +453,7 @@ export class Platforms {
         // параметры стиля
         const strokeWidth = 4
         const strokeColor = this.scene.standartColors.dark_gray
-
+        const alpha = 0.9
 
         g.__x = -width / 2 + strokeWidth / 2;
         g.__y = 0 + strokeWidth / 2;
@@ -462,7 +462,7 @@ export class Platforms {
         g.__color = strokeColor;
         g.__strokeWidth = strokeWidth;
 
-        g.lineStyle(g.__strokeWidth, strokeColor, 1)
+        g.lineStyle(g.__strokeWidth, strokeColor, alpha)
         g.strokeRect(g.__x, g.__y, g.__width, g.__height);
         return g
     }
@@ -565,7 +565,7 @@ export class Platforms {
     }
     showBonusBlocks() {
         let count = 0
-        const delay = 50
+        const delay = 70
         const half = 50   // подстрой под темп (мс)
 
         this.blocks.forEach((block) => {
@@ -587,7 +587,7 @@ export class Platforms {
 
             const d = count * delay
 
-            count++
+            // count++
 
             // 1) схлопнуть фронт по Y (как бы "повернуть" вокруг X)
             this.scene.tweens.add({
@@ -603,6 +603,10 @@ export class Platforms {
                     back.alpha = 1
                     back.scaleY = 0
 
+                    const detune = 1800 + Phaser.Math.Between(0, 400) // was
+                    // const detune = 1800 + count * 50 // data.count * 10
+                    this.scene.sounds.domino.play({ detune: detune })
+
                     // 2) развернуть бэк по Y
                     this.scene.tweens.add({
                         targets: back,
@@ -614,6 +618,7 @@ export class Platforms {
                     })
                 }
             })
+            count++
         })
     }
 

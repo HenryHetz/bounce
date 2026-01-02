@@ -38,7 +38,7 @@ export default class GameScene extends Phaser.Scene {
     // dev - prod
     this.isDev = true
     this.timeScale = 0.5
-    // this.timeScale = -0.4 // dev
+    this.timeScale = -0.4 // dev
     this.setTimeScale()
     //this.time.timeScale = this.timeScale
 
