@@ -78,7 +78,7 @@ export default class PreloadScene extends Phaser.Scene {
     // dev
     this.load.image('flash_copy', 'assets/sprites/elements/flash_copy.png')
     this.load.image('camera_frame', 'assets/sprites/dev/camera_frame.png')
-    // this.load.image('dev_ui', 'assets/sprites/dev/drops_ui_5.png')
+    this.load.image('tuner_bg', 'assets/sprites/dev/tuner_.png')
     // this.load.image('grid', 'assets/sprites/dev/grid.png')
     this.load.image('co', 'assets/sprites/dev/co_2.png')
     // this.load.image('bot_chat', 'assets/sprites/dev/bot_chart_4.jpg')
@@ -90,8 +90,8 @@ export default class PreloadScene extends Phaser.Scene {
       'assets/sprites/sheets/smileys.json'
     )
     // bg
-    this.load.image('main_bg', 'assets/sprites/bg/BOUNCE_FUJI_BG_T_1.png')
-    this.load.image('tuner_bg', 'assets/sprites/bg/tuner_bg.jpg')
+    this.load.image('main_bg', 'assets/sprites/bg/BOUNCE_FUJI_BG_3.png')
+    // this.load.image('tuner_bg', 'assets/sprites/bg/tuner_bg.jpg')
     this.load.image('pattern', 'assets/sprites/bg/pattern.jpg')
     // console.log('pattern texture key:', pattern.texture.key)
     // elements

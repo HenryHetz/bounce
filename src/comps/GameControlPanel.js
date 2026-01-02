@@ -47,9 +47,18 @@ export class GameControlPanel {
       .setOrigin(0.5)
 
 
+    this.stakeLabel = this.scene.add
+      .text(this.stakeCounter.x, this.stakeCounter.y - 40, 'STAKE', {
+        // fontFamily: 'AvenirNextCondensedBold',
+        // fontSize: '18px',
+        color: labelColor,
+        font: labelFont
+      })
+      .setOrigin(0.5, 0).setAlign('center')
+
     this.autoCashoutLabel = this.scene.add
       .text(this.stakeCounter.x, this.stakeCounter.y + 40, 'AUTO CASH: 2.11', {
-        font: '18px AvenirNextCondensedBold',
+        font: labelFont,
         color: labelColor,
       })
       .setOrigin(0.5)
@@ -112,10 +121,11 @@ export class GameControlPanel {
       .on('pointerdown', () => this.onAuto?.())
 
     this.autoLabel = this.scene.add
-      .text(indent, buttonY - nameSpacing, 'AUTO', {
-        fontFamily: 'AvenirNextCondensedBold',
-        fontSize: '18px',
+      .text(indent, buttonY - nameSpacing, 'AUTO_BET', {
+        // fontFamily: 'AvenirNextCondensedBold',
+        // fontSize: '18px',
         color: labelColor,
+        font: labelFont
       })
       .setOrigin(0.5, 0)
 

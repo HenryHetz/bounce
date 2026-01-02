@@ -49,7 +49,7 @@ export class RiskTunerPanel {
 
     // --- Фон (теперь интерактивный, вместо старого vail)
     this.bg = scene.add
-      .image(0, 80, 'tuner_bg')
+      .image(0, 0, 'tuner_bg')
       .setOrigin(0)
       .setAlpha(1)
       .setInteractive()

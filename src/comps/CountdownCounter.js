@@ -3,8 +3,8 @@ import { Scale } from "phaser"
 export class CountdownCounter {
   constructor(scene) {
     this.scene = scene
-    this.x = this.scene.sceneCenterX
-    this.y = 420 // 600
+    this.x = scene.sceneCenterX
+    this.y = scene.hitPointY - 30 // 
 
     this.counter = scene.add
       .text(this.x, this.y, '', {

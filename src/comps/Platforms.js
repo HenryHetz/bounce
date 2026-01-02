@@ -8,13 +8,12 @@ export class Platforms {
 
         this.ballX = scene.ballX
         this.ballY = scene.ballY
-        this.distanceY = scene.distanceY
         this.duration = scene.duration
         this.depth = 10
 
-        this.touchPointY = this.ballY + this.distanceY
-
-        this.groupTotalHeight = 470 - this.scene.baseDistanceY
+        this.hitPointY = scene.hitPointY
+        // изменить калькуляцию!!!
+        this.groupTotalHeight = 240
         this.blockWidth = 180
 
         this.payTable = []
@@ -84,7 +83,7 @@ export class Platforms {
 
         // Один сет (одна группа) в точке касания
         this.root = this.scene.add
-            .container(this.ballX, this.touchPointY)
+            .container(this.ballX, this.hitPointY)
             .setDepth(this.depth)
 
         this.setContainer = this.scene.add.container(0, 0)
@@ -238,7 +237,7 @@ export class Platforms {
         // 2) удаляем из массива
         this.blocks.shift()
 
-        const easeBackInOut = (v) => Phaser.Math.Easing.Back.InOut(v, 0.7)
+        const easeBackInOut = (v) => Phaser.Math.Easing.Back.InOut(v, 1) // 0.7
         let patternSwitched = false
 
         // 3) подтягиваем оставшиеся вверх (визуально)
@@ -268,9 +267,9 @@ export class Platforms {
                 // 5) восстанавливаем сет и перерисовываем числа, начиная со следующего шага
                 this.applyPattern(next, { immediate: true })
                 this.renderMultipliers(data.count + 1)
-
+                this.showBonusBlocks(this.blocks)
                 const detune = 1800 + Phaser.Math.Between(0, 400) // data.count * 10
-                this.scene.sounds.domino.play({ detune: detune })
+                // this.scene.sounds.domino.play({ detune: detune })
                 // console.log(data.count, 'domino.play', detune)
             },
         })
@@ -295,7 +294,7 @@ export class Platforms {
             // это нужно проверять из сцены, и вообще должно приходить от сервера
             // но для простоты пусть будет тут
             // все блоки с паттерном — бонус!
-            if (block.__pattern.alpha > 0) {
+            if (block.__bonus) {
                 bonus += 1
             }
         }
@@ -305,7 +304,7 @@ export class Platforms {
             // все блоки с паттерном — бонус!
             const hasCashOut = this.scene.hasCashout
             if (!hasCashOut) {
-                this.scene.sounds.jingle.play()
+                // this.scene.sounds.jingle.play()
                 console.log('BONUS achieved! All patterns visible!')
             } else {
                 console.log('BONUS skipped due to cashout')
@@ -315,7 +314,7 @@ export class Platforms {
 
         if (immediate) {
             this.root.x = this.ballX
-            this.root.y = this.touchPointY
+            this.root.y = this.hitPointY
             this.setContainer.y = 0
         }
     }
@@ -428,19 +427,19 @@ export class Platforms {
     // -----------------------
     // Blocks visuals
     // -----------------------
-    createBlockRect(width, height, index) {
+    createBlockRect(width, height, color) {
         const g = this.scene.add.graphics();
 
-        const isWhite = ((index + this.chessPhase) % 2 === 0);
-        const fillColor = isWhite
-            ? this.scene.standartColors.white
-            : this.scene.standartColors.gray;
+        // const isWhite = ((index + this.chessPhase) % 2 === 0);
+        // const fillColor = isWhite
+        //     ? this.scene.standartColors.white
+        //     : this.scene.standartColors.gray;
 
         g.__width = width;
         g.__height = height;
         g.__x = -width / 2;
         g.__y = 0;
-        g.__color = fillColor;
+        g.__color = color;
 
         g.fillStyle(g.__color, 1);
         g.fillRect(g.__x, g.__y, g.__width, g.__height);
@@ -470,6 +469,7 @@ export class Platforms {
 
     createBlock(heightPx, index) {
         const scene = this.scene
+        const block = scene.add.container(0, 0)
         // нужен прямоугольник
         // паттерн
         // рамка - без фона
@@ -477,7 +477,14 @@ export class Platforms {
 
         const strokeWidth = 4
 
-        const rect = this.createBlockRect(this.blockWidth, heightPx, index)
+        const back = this.createBlockRect(this.blockWidth, heightPx, this.scene.standartColors.black)
+
+        const isWhite = ((index + this.chessPhase) % 2 === 0);
+        const fillColor = isWhite
+            ? this.scene.standartColors.white
+            : this.scene.standartColors.gray;
+        const rect = this.createBlockRect(this.blockWidth, heightPx, fillColor)
+
         const text = scene.add
             .text(0, heightPx * 0.5, '', {
                 fontSize: '20px',
@@ -492,20 +499,23 @@ export class Platforms {
             .setOrigin(0.5, 0.5)
 
         const patternRandom = Phaser.Math.FloatBetween(0, 1)
-        const patternVisible = patternRandom < this.patternProbabilities
+        let patternVisible = patternRandom < this.patternProbabilities
         const patternIndent = 0
-
+        // patternVisible = true // dev
         let pattern = null
+
         if (patternVisible) {
+            block.__bonus = true
             pattern = scene.add.tileSprite(
                 0,
                 heightPx / 2,
                 this.blockWidth - patternIndent * 2,
                 heightPx - patternIndent * 2,
                 'pattern'
-            ).setOrigin(0.5).setAlpha(0.5)
+            ).setOrigin(0.5).setAlpha(0.0)
         } else {
             // если не бонусная картинка, то паттерн из стандартных
+            block.__bonus = false
             pattern = scene.add.rectangle(
                 0,
                 heightPx / 2,
@@ -517,9 +527,9 @@ export class Platforms {
 
         const frame = this.createBlockFrame(this.blockWidth, heightPx, index)
 
-        const block = scene.add.container(0, 0, [rect, pattern, frame, text])
+        block.add([back, rect, pattern, frame, text])
         // block.setMask(mask);
-
+        // block.__bonus = true // dev
         block.__rect = rect
         block.__frame = frame
         block.__text = text
@@ -529,6 +539,82 @@ export class Platforms {
         block.alpha = 1
         return block
     }
+    _showBonusBlocks() {
+        let count = 0 // это кол-во паттернов с бонусом - мы их можем заранее знать
+        const delay = 50
+        const duration = 100
+
+        this.blocks.forEach((block, index) => {
+            if (block.__bonus) { // это временный чит
+                count++
+
+                this.scene.tweens.add({
+                    targets: block.__rect,
+                    // y: block.__rect.y + block.__height,
+                    // height: 0,
+                    alpha: 0,
+                    delay: count * delay,
+                    duration: duration,
+                    onComplete: () => {
+                        block.__pattern.alpha = 1
+                    }
+                })
+            }
+        })
+
+    }
+    showBonusBlocks() {
+        let count = 0
+        const delay = 50
+        const half = 70   // подстрой под темп (мс)
+
+        this.blocks.forEach((block) => {
+            if (!block.__bonus) return
+            count++
+
+            const front = block.__rect
+            const back = block.__pattern
+            const height = block.__height
+
+            // старт
+            front.alpha = 1
+            front.scaleY = 1
+            // front.y -= height / 2
+
+            back.alpha = 0
+            back.scaleY = 0
+            back.y = back.y - height / 2
+
+            const d = count * delay
+
+            // 1) схлопнуть фронт по Y (как бы "повернуть" вокруг X)
+            this.scene.tweens.add({
+                targets: front,
+                scaleY: 0,
+                y: front.y + height,
+                delay: d,
+                duration: half,
+                ease: 'Cubic.easeIn',
+                onComplete: () => {
+                    // в нуле меняем сторону
+                    front.alpha = 0
+                    back.alpha = 1
+                    back.scaleY = 0
+
+                    // 2) развернуть бэк по Y
+                    this.scene.tweens.add({
+                        targets: back,
+                        delay: 0,
+                        scaleY: 1,
+                        y: back.y + height / 2,
+                        duration: half,
+                        ease: 'Cubic.easeOut',
+                    })
+                }
+            })
+        })
+    }
+
 
     showCrashBlock(data) {
         const crashStep = this.scene.crashIndex // перенести в реестр и гет

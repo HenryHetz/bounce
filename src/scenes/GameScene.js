@@ -38,6 +38,7 @@ export default class GameScene extends Phaser.Scene {
     // dev - prod
     this.isDev = true
     this.timeScale = 0.5
+    // this.timeScale = -0.4 // dev
     this.setTimeScale()
     //this.time.timeScale = this.timeScale
 
@@ -56,7 +57,7 @@ export default class GameScene extends Phaser.Scene {
     this.sceneCenterX = this.cameras.main.centerX
     this.ballX = 320
     this.ballY = 160
-    this.hitPointY = 450
+    this.hitPointY = 440
     // изменить калькуляцию!!!
     this.baseDistanceY = 230
     this.distanceY = this.baseDistanceY + 60
@@ -119,7 +120,7 @@ export default class GameScene extends Phaser.Scene {
 
     // UI SETTINGS
     this.buttonNameSpacing = 60
-    this.buttonIndent = 110
+    this.buttonIndent = 100
     this.labelColor = this.textColors.white
     this.labelFont = '14px AvenirBlack'
     this.duration = 500 // это не duration, а половина цикла
@@ -611,8 +612,8 @@ export default class GameScene extends Phaser.Scene {
     this.events.emit('gameEvent', {
       mode: 'FALL',
       load: {
-        mode: bonza ? 'bonza' : 'common', // dev
-        // mode: 'common',
+        // mode: bonza ? 'bonza' : 'common', // dev
+        mode: 'common',
         depth: depth,
       }
     })

@@ -4,8 +4,8 @@ export class Ball {
   constructor(scene, emitter, bounceHandler) {
     this.scene = scene
     this.diameter = 110
-    this.x = 320 // this.scene.ballX
-    this.y = 160 + this.diameter / 2 // this.scene.ballY + this.diameter / 2
+    this.x = scene.sceneCenterX // this.scene.ballX
+    this.y = scene.ballY + this.diameter / 2 // this.scene.ballY + this.diameter / 2
     this.hitPointY = this.scene.hitPointY // точка удара - и достаточно!
     this.distanceY = this.hitPointY - this.y // scene.distanceY 
 
@@ -91,7 +91,7 @@ export class Ball {
       multiplier >= this.scene.smallShakeX &&
       !this.ballTrailEmitter.emitting
     ) {
-      this.ballTrailEmitter.emitting = true
+      // this.ballTrailEmitter.emitting = true
       // this.pulseTween.resume()
     }
     if (multiplier >= this.scene.medShakeX && this.pulseTween.paused) {
