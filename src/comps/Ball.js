@@ -269,17 +269,19 @@ export class Ball {
   fall(callback) {
     this.stopTween()
     // this.trail.start();
+    // console.log('ball fall start', this.scene.elapsedSec.toFixed(2))
 
     this.bounceTween =
       this.scene.tweens.add({
         targets: this.ball,
-        y: this.y + 10,
+        y: this.y + 20,
         duration: this.duration * 0.6, // this.duration / 2
         //   yoyo: true,
         ease: 'Quad.easeIn', // 'Sine.easeIn'
 
         onComplete: () => {
           // this.trail.start();
+          // console.log('ball fall faze 2', this.scene.elapsedSec.toFixed(2))
 
           this.scene.tweens.add({
             targets: this.ball,
@@ -310,31 +312,44 @@ export class Ball {
     this.stopTween()
     this.ball.y = this.y + this.distanceY
 
+    // var 1
+    // this.bouncing =
+    //   this.scene.tweens.add({
+    //     targets: this.ball,
+    //     y: this.y + 20,
+    //     duration: this.duration * 0.6, // this.duration
+    //     ease: 'Qubic.easeOut', // Quart
+    //     onComplete: () => {
+    //       // setTimeout(() => {
+    //       //   if (callback) callback()
+    //       // }, this.duration / 2);
+    //       this.scene.tweens.add({
+    //         targets: this.ball,
+    //         y: this.y,
+    //         duration: this.duration * 0.4, // this.duration
+    //         // yoyo: true,
+    //         ease: 'Quad.easeOut', // Qubic
+    //         // onYoyo: () => { },
+    //         onComplete: () => {
+    //           if (callback) callback()
+    //           // this.fall(callback)
+    //           // console.log('apogei',)
+    //         },
+    //       })
+    //       // if (callback) callback()
+    //       // console.log('bounce',)
+    //     },
+    //   })
+
+    // var 2
     this.bouncing =
       this.scene.tweens.add({
         targets: this.ball,
-        y: this.y + 10,
-        duration: this.duration * 0.6, // this.duration
-        ease: 'Quad.easeOut', // Quart
+        y: this.y,
+        duration: this.duration, // this.duration
+        ease: 'Quart.easeOut', // Quart
         onComplete: () => {
-          // setTimeout(() => {
-          //   if (callback) callback()
-          // }, this.duration / 2);
-          this.scene.tweens.add({
-            targets: this.ball,
-            y: this.y,
-            duration: this.duration * 0.4, // this.duration
-            // yoyo: true,
-            ease: 'Quad.easeOut', // Qubic
-            // onYoyo: () => { },
-            onComplete: () => {
-              if (callback) callback()
-              // this.fall(callback)
-              // console.log('apogei',)
-            },
-          })
-          // if (callback) callback()
-          // console.log('bounce',)
+          if (callback) callback()
         },
       })
   }

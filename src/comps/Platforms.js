@@ -35,6 +35,9 @@ export class Platforms {
             { pattern: [1, 1, 1, 1, 1, 1], weight: 10, transitions: [] },
         ]
 
+        // dev
+        this.buildAvatarFrames(this.blockMap)
+
         this.compiledMap = this.compileBlockMap(this.blockMap)
 
         this.multiplierToAmount = () => {
@@ -245,7 +248,7 @@ export class Platforms {
             targets: this.setContainer,
             y: this.setContainer.y - removedH,
             delay: 50,
-            duration: 150, //  Math.max(60, Math.floor(this.duration * 0.25))
+            duration: 200, //  Math.max(60, Math.floor(this.duration * 0.25))
             // ease: 'Back.easeInOut', // Cubic Back.easeInOut
             ease: easeBackInOut,
             onUpdate: (tween) => {
@@ -259,18 +262,15 @@ export class Platforms {
             },
             onComplete: () => {
                 this.setContainer.y = 0
-                // а нужен переход, анимация между двумя состояниями
-                // 4) выбираем новый паттерн (transitions позже)
-                const next = this.pickNextPattern() // this.currentPatternId
-                // const next = this.currentPattern // dev
-                // console.log(this.currentPatternId, 'Next pattern:', next)
+
+                // не обязательно каждый раз выбирать из карты и менять паттерн!
+                const next = this.pickNextPattern(this.currentPatternId) // this.currentPatternId
+
                 // 5) восстанавливаем сет и перерисовываем числа, начиная со следующего шага
                 this.applyPattern(next, { immediate: true })
                 this.renderMultipliers(data.count + 1)
                 this.showBonusBlocks(this.blocks)
-                // const detune = 1800 + Phaser.Math.Between(0, 400) // data.count * 10
-                // this.scene.sounds.domino.play({ detune: detune })
-                // console.log(data.count, 'domino.play', detune)
+
             },
         })
     }
@@ -278,14 +278,18 @@ export class Platforms {
         this.currentPattern = patternObj.pattern
         this.currentPatternId = patternObj.id
 
+        // console.log('applyPattern',)
+
         this.setContainer.removeAll(true)
         this.blocks = []
+
+        // this.buildAvatarFrames(patternObj)
 
         let bonus = 0
         let y = 0
         for (let i = 0; i < patternObj.blocks; i++) {
             const h = patternObj.heightsPx[i]
-            const block = this.createBlock(h, i)
+            const block = this.createBlock(h, i, patternObj.blocks)
             block.y = y
             y += h
             this.setContainer.add(block)
@@ -373,7 +377,7 @@ export class Platforms {
 
         // console.log(this.lastKnownMulty, this.lastKnownStep, 'pickNextPattern amount:', amount, this.payTable.length)
         // console.log('pickNextPattern candidates for amount', amount, ':', candidates)
-        // return candidates[0] // dev
+        return candidates[0] // dev
 
         if (prevId) {
             const prev = this.compiledMap.byId.get(prevId)
@@ -447,13 +451,13 @@ export class Platforms {
         return g;
     }
 
-    createBlockFrame(width, height, index, isBonus = false) {
+    createBlockFrame(width, height, color) {
         const g = this.scene.add.graphics()
 
         // параметры стиля
         const strokeWidth = 4
-        const strokeColor = this.scene.standartColors.dark_gray
-        const alpha = 0.9
+        const strokeColor = color ? color : this.scene.standartColors.dark_gray
+        const alpha = 1
 
         g.__x = -width / 2 + strokeWidth / 2;
         g.__y = 0 + strokeWidth / 2;
@@ -467,7 +471,7 @@ export class Platforms {
         return g
     }
 
-    createBlock(heightPx, index) {
+    createBlock(heightPx, index, blocksCount) {
         const scene = this.scene
         const block = scene.add.container(0, 0)
         // нужен прямоугольник
@@ -477,12 +481,13 @@ export class Platforms {
 
         const strokeWidth = 4
 
-        const back = this.createBlockRect(this.blockWidth, heightPx, this.scene.standartColors.black)
+        const back = this.createBlockRect(this.blockWidth, heightPx, this.scene.standartColors.dark_gray)
 
         const isWhite = ((index + this.chessPhase) % 2 === 0);
         const fillColor = isWhite
             ? this.scene.standartColors.white
             : this.scene.standartColors.gray;
+
         const rect = this.createBlockRect(this.blockWidth, heightPx, fillColor)
 
         const text = scene.add
@@ -499,20 +504,30 @@ export class Platforms {
             .setOrigin(0.5, 0.5)
 
         const patternRandom = Phaser.Math.FloatBetween(0, 1)
-        let patternVisible = patternRandom < this.patternProbabilities
+        let isBonus = patternRandom < this.patternProbabilities
         const patternIndent = 0
-        // patternVisible = true // dev
         let pattern = null
 
-        if (patternVisible) {
+        // isBonus = true // dev
+
+        if (isBonus) {
             block.__bonus = true
-            pattern = scene.add.tileSprite(
-                0,
-                heightPx / 2,
-                this.blockWidth - patternIndent * 2,
-                heightPx - patternIndent * 2,
-                'pattern'
-            ).setOrigin(0.5).setAlpha(0.0)
+
+            pattern = scene.add.image(0, 0, 'avatar', `slice_${blocksCount}_${index}`)
+                .setOrigin(0.5, 0)
+                .setDisplaySize(this.blockWidth, heightPx)
+                .setAlpha(0)
+
+            // var 1
+            // pattern = scene.add.tileSprite(
+            //     0,
+            //     0,
+            //     this.blockWidth - patternIndent * 2,
+            //     heightPx - patternIndent * 2,
+            //     'pattern'
+            // ).setOrigin(0.5, 0).setAlpha(0.0)
+
+
         } else {
             // если не бонусная картинка, то паттерн из стандартных
             block.__bonus = false
@@ -525,7 +540,7 @@ export class Platforms {
             ).setOrigin(0.5).setAlpha(0)
         }
 
-        const frame = this.createBlockFrame(this.blockWidth, heightPx, index)
+        const frame = this.createBlockFrame(this.blockWidth, heightPx, this.scene.standartColors.black)
 
         block.add([back, rect, pattern, frame, text])
         // block.setMask(mask);
@@ -539,34 +554,63 @@ export class Platforms {
         block.alpha = 1
         return block
     }
-    _showBonusBlocks() {
-        let count = 0 // это кол-во паттернов с бонусом - мы их можем заранее знать
-        const delay = 50
-        const duration = 100
+    buildAvatarFrames(map) {
+        const tex = this.scene.textures.get('avatar')
 
-        this.blocks.forEach((block, index) => {
-            if (block.__bonus) { // это временный чит
-                count++
+        map.forEach((row, index) => {
+            let y = 0
+            const amount = row.pattern.length
+            const height = Math.floor(this.groupTotalHeight / amount)
+            // console.log('amount', amount, 'height', height)
+            for (let i = 0; i < amount; i++) {
+                const key = `slice_${amount}_${i}`
 
-                this.scene.tweens.add({
-                    targets: block.__rect,
-                    // y: block.__rect.y + block.__height,
-                    // height: 0,
-                    alpha: 0,
-                    delay: count * delay,
-                    duration: duration,
-                    onComplete: () => {
-                        block.__pattern.alpha = 1
-                    }
-                })
+                if (!tex.has(key)) {
+                    tex.add(key, 0, 0, y, 180, height)
+                }
+
+                // tex.add(
+                //     `slice_${amount}_${i}`,
+                //     0,
+                //     0,
+                //     y,
+                //     180,
+                //     height
+                // )
+                y += height
             }
         })
 
     }
+    // _showBonusBlocks() {
+    //     let count = 0 // это кол-во паттернов с бонусом - мы их можем заранее знать
+    //     const delay = 50
+    //     const duration = 100
+
+    //     this.blocks.forEach((block, index) => {
+    //         if (block.__bonus) { // это временный чит
+    //             count++
+
+    //             this.scene.tweens.add({
+    //                 targets: block.__rect,
+    //                 // y: block.__rect.y + block.__height,
+    //                 // height: 0,
+    //                 alpha: 0,
+    //                 delay: count * delay,
+    //                 duration: duration,
+    //                 onComplete: () => {
+    //                     block.__pattern.alpha = 1
+    //                 }
+    //             })
+    //         }
+    //     })
+
+    // }
     showBonusBlocks() {
         let count = 0
-        const delay = 70
-        const half = 50   // подстрой под темп (мс)
+        const delay = 80 // 70 60
+        const half = 120   // 100 100
+        const treshold = 1.5
 
         this.blocks.forEach((block) => {
             if (!block.__bonus) return
@@ -577,51 +621,130 @@ export class Platforms {
             const height = block.__height
 
             // старт
-            front.alpha = 1
-            front.scaleY = 1
+            // front.alpha = 1
+            // front.scaleY = 1
             // front.y -= height / 2
 
-            back.alpha = 0
+            back.alpha = 1
             back.scaleY = 0
-            back.y = back.y - height / 2
+            // back.y = back.y - height / 2
 
             const d = count * delay
 
             // count++
 
             // 1) схлопнуть фронт по Y (как бы "повернуть" вокруг X)
-            this.scene.tweens.add({
-                targets: front,
-                scaleY: 0,
-                y: front.y + height,
-                delay: d,
-                duration: half,
-                ease: 'Cubic.easeIn',
-                onComplete: () => {
-                    // в нуле меняем сторону
-                    front.alpha = 0
-                    back.alpha = 1
-                    back.scaleY = 0
+            // this.scene.tweens.add({
+            //     targets: front,
+            //     scaleY: 0,
+            //     y: front.y + height,
+            //     delay: d,
+            //     duration: half,
+            //     ease: 'Cubic.easeIn',
+            //     onComplete: () => {
+            //         // в нуле меняем сторону
+            //         front.alpha = 0
+            //         back.alpha = 1
+            //         back.scaleY = 0
 
-                    const detune = 1800 + Phaser.Math.Between(0, 400) // was
-                    // const detune = 1800 + count * 50 // data.count * 10
-                    this.scene.sounds.domino.play({ detune: detune })
+            //         const detune = 1800 + Phaser.Math.Between(0, 400) // was
+            //         // const detune = 1800 + count * 50 // data.count * 10
+            //         this.scene.sounds.domino.play({ detune: detune })
 
-                    // 2) развернуть бэк по Y
-                    this.scene.tweens.add({
-                        targets: back,
-                        delay: 0,
-                        scaleY: 1,
-                        y: back.y + height / 2,
-                        duration: half,
-                        ease: 'Cubic.easeOut',
-                    })
-                }
-            })
+            //         // 2) развернуть бэк по Y
+            //         this.scene.tweens.add({
+            //             targets: back,
+            //             delay: 0,
+            //             scaleY: 1,
+            //             y: back.y + height / 2,
+            //             duration: half,
+            //             ease: 'Cubic.easeOut',
+            //         })
+            //     }
+            // })
+
+            // var 2
+            if (this.scene.timeScale <= treshold) {
+                this.scene.tweens.add({
+                    targets: front,
+                    scaleY: 0,
+                    // alpha: 1,
+                    y: front.y + height,
+                    delay: d,
+                    duration: half,
+                    ease: 'Cubic.easeIn', // easeIn easeOut
+                    onComplete: () => {
+
+                        // const detune = 1800 + Phaser.Math.Between(0, 400) // was
+                        // // const detune = 1800 + count * 50 // data.count * 10
+                        // this.scene.sounds.domino.play({ detune: detune })
+                    },
+                })
+
+                this.scene.tweens.add({
+                    targets: back,
+                    scaleY: 1,
+                    // alpha: 1,
+                    // y: back.y + height / 2,
+                    delay: d + 5,
+                    duration: half,
+                    ease: 'Cubic.easeIn', // easeIn easeOut
+                    onComplete: () => {
+
+                        const detune = 1800 + Phaser.Math.Between(0, 400) // was
+                        // const detune = 1800 + count * 50 // data.count * 10
+                        this.scene.sounds.domino.play({ detune: detune })
+                    },
+                })
+            }
+
+            // var 3
+            if (this.scene.timeScale > treshold) {
+
+                this.scene.tweens.add({
+                    targets: front,
+                    scaleY: 0,
+                    // alpha: 1,
+                    y: front.y + height,
+                    delay: delay,
+                    duration: half,
+                    ease: 'Cubic.easeIn', // easeIn easeOut
+                    onComplete: () => { },
+                })
+
+                this.scene.tweens.add({
+                    targets: back,
+                    scaleY: 1,
+                    // alpha: 1,
+                    // y: back.y + height / 2,
+                    delay: delay + 10,
+                    duration: half,
+                    ease: 'Cubic.easeIn', // easeIn easeOut
+                    onComplete: () => {
+                        // if (!isSounded) {
+                        //     console.log('sound')
+                        //     isSounded = true
+                        //     const detune = 1800 + Phaser.Math.Between(0, 400) // was
+                        //     this.scene.sounds.domino.play({ detune: detune })
+                        // }
+
+                    },
+                })
+            }
             count++
         })
+        if (this.scene.timeScale > treshold && count > 0) {
+            // one sound
+            setTimeout(() => {
+                const detune = 1800 + Phaser.Math.Between(0, 400) // was
+                this.scene.sounds.domino.play({ detune: detune })
+            }, delay)
+        }
+        const left = this.blocks.length - count
+        if (left <= 2) {
+            console.log('left', left)
+        }
     }
-
 
     showCrashBlock(data) {
         const crashStep = this.scene.crashIndex // перенести в реестр и гет

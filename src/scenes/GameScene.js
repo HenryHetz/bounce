@@ -400,7 +400,10 @@ export default class GameScene extends Phaser.Scene {
         volume: 0.2,
       }),
       domino: this.sound.add('domino', {
-        volume: 1, detune: 1000
+        volume: 1, // detune: 1000
+      }),
+      shuffle: this.sound.add('shuffle', {
+        volume: 1, // detune: 1000
       }),
       hit: this.sound.add('hit', {
         volume: 2, detune: 500
@@ -844,8 +847,8 @@ export default class GameScene extends Phaser.Scene {
       if (i === 0) crashTable[i].probability = 1 - acc
     }
 
-    console.table(crashTable)
-    console.table(payTable)
+    // console.table(crashTable)
+    // console.table(payTable)
     // dev
     // this.checkMath(crashTable)
 

@@ -82,6 +82,7 @@ export default class PreloadScene extends Phaser.Scene {
     // this.load.image('grid', 'assets/sprites/dev/grid.png')
     this.load.image('co', 'assets/sprites/dev/co_2.png')
     // this.load.image('bot_chat', 'assets/sprites/dev/bot_chart_4.jpg')
+    this.load.image('avatar', 'assets/sprites/bonus/avatar_2.jpg')
 
     // атласы
     this.load.atlas(
@@ -144,7 +145,8 @@ export default class PreloadScene extends Phaser.Scene {
     this.load.audio('crash', 'assets/sounds/crash.mp3')
     this.load.audio('cashout', 'assets/sounds/cashout.mp3')
     this.load.audio('coin', 'assets/sounds/coin.mp3')
-    this.load.audio('domino', 'assets/sounds/domino_2.mp3')
+    this.load.audio('domino', 'assets/sounds/domino_2.mp3') // domino_2 shuffle_1
+    this.load.audio('shuffle', 'assets/sounds/shuffle_1.mp3') // domino_2 shuffle_1
     this.load.audio('hit', 'assets/sounds/hit.mp3')
     this.load.audio('jingle', 'assets/sounds/jingle.mp3')
     this.load.audio('puck', 'assets/sounds/puck_down.mp3')
