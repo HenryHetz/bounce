@@ -128,6 +128,7 @@ export class GameControlPanel {
         font: labelFont
       })
       .setOrigin(0.5, 0)
+      .setAlpha(0)
 
     // Tuner Button
     this.buttonTuner = this.scene.add

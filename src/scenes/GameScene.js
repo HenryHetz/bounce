@@ -38,7 +38,7 @@ export default class GameScene extends Phaser.Scene {
     // dev - prod
     this.isDev = true
     this.timeScale = 0.5
-    this.timeScale = -0.4 // dev
+    // this.timeScale = -0.4 // dev
     this.setTimeScale()
     //this.time.timeScale = this.timeScale
 
@@ -568,7 +568,7 @@ export default class GameScene extends Phaser.Scene {
         this.initCrashIndex() // хранить на сервере, запрашивать isCrash каждое касание (за 100 мс)
         // console.log('crashIndex', this.crashIndex)
         if (this.crashIndex >= this.payTable.length) console.log('проход до финиша')
-        else console.log('crashIndex', this.crashIndex, 'X', this.payTable[this.crashIndex].multiplier)
+        else console.log('crashIndex', this.crashIndex, 'X' + this.payTable[this.crashIndex].multiplier.toFixed(2))
 
         this.isCrashed = false
         this.bounceCount = 0

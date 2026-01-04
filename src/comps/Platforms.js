@@ -508,7 +508,7 @@ export class Platforms {
         const patternIndent = 0
         let pattern = null
 
-        // isBonus = true // dev
+        // isBonus = false // dev
 
         if (isBonus) {
             block.__bonus = true
